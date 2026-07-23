@@ -8,7 +8,9 @@ ASCII-art video treatment used for the LightFeather careers "dancing people" her
 
 | File | Purpose |
 |---|---|
-| `people-ascii-gallery.html` | **The main deliverable** — self-contained gallery + tuner page. 9 embedded clips rendered live as ASCII, 10 style presets, full knob panel (global and per-video). Open directly in a browser — no server needed. |
+| `people-ascii-gallery.html` | **The main deliverable** — self-contained gallery + tuner page. 9 embedded clips rendered live as ASCII, 11 style presets, full knob panel (global and per-video). Open directly in a browser — no server needed. |
+| `ink-blocks-command-center.html` | **Ink Blocks command center** — dedicated tuner for the LF-Blocks style (Ink Blocks at 44 cols, evolved): one-color pixels for the body, L/F letterforms carrying the detail. Pixel-size changer, L/F detail amount, grouped controls, per-video tuning. |
+| `gen_command_center.py` | Builds `ink-blocks-command-center.html` — the base settings live at the top of the script. |
 | `people-ascii-preview.html` | **The picked look, locked** — the settings exported from the tuner on 2026-07-23 (54-col pixels · ink · duo, contrast 0.65, brightness 0.75) baked in as a single preview. No knobs; just the mosaic + green/cream toggle — strictly the two brand colors, system green `#0D3E3D` and cream `#FFFBF8`. |
 | `gen_preview.py` | Builds `people-ascii-preview.html` — the locked settings live at the top of the script. |
 | `lf-people-ascii-hero.html` | Standalone hero mockup — the effect as it appears in the careers page context. |
@@ -30,12 +32,15 @@ Open `people-ascii-gallery.html` in any browser. Keyboard shortcuts:
 ## Rebuilding
 
 ```bash
-python3 gen_gallery.py   # regenerates people-ascii-gallery.html from clips/
+python3 gen_gallery.py          # regenerates people-ascii-gallery.html from clips/
+python3 gen_command_center.py   # regenerates ink-blocks-command-center.html
 ```
 
 Requires Python 3 with the deps used by `render_core.py` (ffmpeg on PATH for clip re-encoding).
 
 ## Live preview
 
-The rendered page is also published as a Claude artifact (view-only):
-https://claude.ai/code/artifact/38d43acd-f535-4b20-a0f3-dd815726da24
+The rendered pages are also published as Claude artifacts (view-only):
+
+- Gallery: https://claude.ai/code/artifact/38d43acd-f535-4b20-a0f3-dd815726da24
+- Ink Blocks command center: https://claude.ai/code/artifact/b36aa0e7-9aa2-46c3-bae3-abcf2eab8335

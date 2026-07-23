@@ -11,7 +11,7 @@ OUT = pathlib.Path(__file__).parent / "harness.html"
 HTML = r"""<!doctype html><html><head><meta charset="utf-8"><style>
 __FONTS__
 body{margin:0;background:#0D3E3D;font-family:'Space Grotesk',monospace;}
-body[data-mode="white"]{background:#F1ECE0;}
+body[data-mode="white"]{background:#FAFAF8;}
 #hdr,.hdr{color:#B9D9CF;padding:14px 20px 6px;font-size:17px;}
 body[data-mode="white"] #hdr,.hdr{color:#0D3E3D;}
 #grid,.grid{display:grid;grid-template-columns:repeat(3,300px);grid-auto-rows:315px;gap:10px;padding:8px 20px 20px;}
@@ -40,7 +40,9 @@ CLIPS.forEach(clip=>{
 });
 function drawAll(){
   document.fonts.ready.then(()=>{
-    VARIANTS.forEach((V,vi)=>{
+    const only = q.get("v");
+    const VARS = only==null ? VARIANTS : [VARIANTS[(+only)%VARIANTS.length]];
+    VARS.forEach((V,vi)=>{
       const hdr = document.createElement("div");
       hdr.id = "hdr"; hdr.textContent = V.name + " — " + V.desc;
       document.body.appendChild(hdr);

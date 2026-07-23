@@ -58,6 +58,8 @@ VARIANTS = [
      "cols": 64, "ramp": "PIXEL", "dir": "ink", "gamma": 1.5, "floor": 0.0, "minOp": 0.40, "bright": 1.15, "color": "mono", "scan": 0.0, "edge": 0.0, "gScale": 1.16, "weight": 400, "stab": 0.0, "smooth": 0.0, "bands": 0, "blur": 0},
     {"key": "v3duo", "name": "3.9 · Duo Ink", "desc": "Ink in two tones: bright strokes over dim mint mids.",
      "cols": 60, "ramp": RAMP_FINE, "dir": "ink", "gamma": 1.5, "floor": 0.0, "minOp": 0.40, "bright": 1.1, "color": "duo", "scan": 0.0, "edge": 0.0, "gScale": 1.16, "weight": 400, "stab": 0.0, "smooth": 0.0, "bands": 0, "blur": 0},
+    {"key": "v3lf", "name": "3.10 · LF Blocks", "desc": "Ink Blocks evolved: one-color pixels for the body, L and F letterforms carrying the detail.",
+     "cols": 44, "ramp": "PIXLF", "dir": "ink", "gamma": 1.5, "floor": 0.0, "minOp": 0.40, "bright": 1.15, "color": "mono", "scan": 0.0, "edge": 0.0, "gScale": 1.16, "weight": 700, "stab": 0.0, "smooth": 0.0, "bands": 0, "blur": 0, "lfThr": 0.55, "pixFill": 0.82},
 ]
 
 
@@ -268,7 +270,10 @@ function renderTile(t, V){
       g[y*cols+x]=Math.sqrt(gx*gx+gy*gy)/4;
     }
   }
-  const isPix=(V.ramp==="PIXEL"), RAMP=V.ramp, rlen=isPix?32:RAMP.length, inv=1/(rlen-1);
+  const isPix=(V.ramp==="PIXEL"), isLF=(V.ramp==="PIXLF"), RAMP=V.ramp,
+        rlen=(isPix||isLF)?32:RAMP.length, inv=1/(rlen-1);
+  const lfT=V.lfThr!=null?V.lfThr:0.55, pixSide=cell*(V.pixFill!=null?V.pixFill:0.82),
+        pixPad=(cell-pixSide)/2, pixA=Math.min(1,0.92*(V.bright||1));
   const N=(V.bands|0), useQ=N>=3;
   const eThr=0.34-0.30*(V.edge||0);
   ctx.clearRect(0,0,t.cw,t.ch);
@@ -303,6 +308,15 @@ function renderTile(t, V){
     if(isPix){
       const side=sideBase*(0.55+0.45*gc), pad=(cell-side)/2;
       ctx.fillRect(ox+x*cell+pad, oy+y*cell+pad, side, side);
+    } else if(isLF){
+      // flat one-color pixels for the body; strong cells become L/F letterforms
+      if(gc>=lfT){
+        ctx.fillStyle="rgba("+col+","+Math.min(1,(V.bright||1)).toFixed(2)+")";
+        ctx.fillText(((x+y)&1)?"F":"L", ox+x*cell, oy+y*cell);
+      } else {
+        ctx.fillStyle="rgba("+col+","+pixA.toFixed(2)+")";
+        ctx.fillRect(ox+x*cell+pixPad, oy+y*cell+pixPad, pixSide, pixSide);
+      }
     } else ctx.fillText(RAMP[gi], ox+x*cell, oy+y*cell);
   }
   t.pKeep.set(keep);
