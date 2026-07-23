@@ -11,7 +11,7 @@ OUT = pathlib.Path(__file__).parent / "harness.html"
 HTML = r"""<!doctype html><html><head><meta charset="utf-8"><style>
 __FONTS__
 body{margin:0;background:#0D3E3D;font-family:'Space Grotesk',monospace;}
-body[data-mode="white"]{background:#FAFAF8;}
+body[data-mode="white"]{background:#FFFBF8;}
 #hdr,.hdr{color:#B9D9CF;padding:14px 20px 6px;font-size:17px;}
 body[data-mode="white"] #hdr,.hdr{color:#0D3E3D;}
 #grid,.grid{display:grid;grid-template-columns:repeat(3,300px);grid-auto-rows:315px;gap:10px;padding:8px 20px 20px;}

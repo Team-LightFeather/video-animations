@@ -23,7 +23,7 @@ __FONTS__
 *{box-sizing:border-box;}
 body{margin:0;background:#0D3E3D;font-family:'Space Grotesk',monospace;color:#EAF6F0;
   min-height:100vh;display:flex;flex-direction:column;}
-body[data-mode="white"]{background:#FAFAF8;color:#0D3E3D;}
+body[data-mode="white"]{background:#FFFBF8;color:#0D3E3D;}
 header{display:flex;align-items:center;justify-content:space-between;gap:12px;
   padding:14px clamp(14px,2.5vw,30px) 8px;flex-wrap:wrap;}
 h1{font-size:clamp(15px,2vw,20px);font-weight:700;margin:0;letter-spacing:-.01em;}
