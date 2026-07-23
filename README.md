@@ -11,8 +11,9 @@ ASCII-art video treatment used for the LightFeather careers "dancing people" her
 | `people-ascii-gallery.html` | **The main deliverable** — self-contained gallery + tuner page. 9 embedded clips rendered live as ASCII, 11 style presets, full knob panel (global and per-video). Open directly in a browser — no server needed. |
 | `ink-blocks-command-center.html` | **Ink Blocks command center** — dedicated tuner for the LF-Blocks style (Ink Blocks at 44 cols, evolved): one-color pixels for the body, L/F letterforms carrying the detail. Pixel-size changer, L/F detail amount, grouped controls, per-video tuning. |
 | `gen_command_center.py` | Builds `ink-blocks-command-center.html` — the base settings live at the top of the script. |
-| `people-ascii-preview.html` | **The picked look, locked** — the settings exported from the tuner on 2026-07-23 (54-col pixels · ink · duo, contrast 0.65, brightness 0.75) baked in as a single preview. No knobs; just the mosaic + green/cream toggle — strictly the two brand colors, system green `#0D3E3D` and cream `#FFFBF8`. |
-| `gen_preview.py` | Builds `people-ascii-preview.html` — the locked settings live at the top of the script. |
+| `people-ascii-preview.html` | **The picked look, locked** — the settings exported from the tuner on 2026-07-23 (54-col pixels · ink, contrast 0.65, brightness 0.75) in the live website's animation colors: the careers-hero mint 3-stop palette on the teal radial (Green) and the about-hero slate palette on cream (Light). `G`/`L` to switch. |
+| `people-ascii-preview-2color.html` | **Two-color version** — same locked look reduced to exactly two colors: flat `#0D3E3D` background + solid `#00FFA8` ink at full opacity; square size alone carries the tone. |
+| `gen_preview.py` | Builds both preview pages — locked settings and the website palettes live at the top of the script. |
 | `lf-people-ascii-hero.html` | Standalone hero mockup — the effect as it appears in the careers page context. |
 | `gen_gallery.py` | Builds `people-ascii-gallery.html` from the clips in `clips/`. |
 | `render_core.py` | Shared toolchain — clip encoding, font embedding, the ASCII renderer JS. |
