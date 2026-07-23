@@ -13,6 +13,7 @@ ASCII-art video treatment used for the LightFeather careers "dancing people" her
 | `gen_command_center.py` | Builds `ink-blocks-command-center.html` — the base settings live at the top of the script. |
 | `people-ascii-preview.html` | **The picked look, locked** — the settings exported from the tuner on 2026-07-23 (54-col pixels · ink, contrast 0.65, brightness 0.75) in the live website's animation colors: the careers-hero mint 3-stop palette on the teal radial (Green) and the about-hero slate palette on cream (Light). `G`/`L` to switch. |
 | `people-ascii-preview-2color.html` | **Two-color version** — same locked look reduced to exactly two colors: flat `#0D3E3D` background + solid `#00FFA8` ink at full opacity; square size alone carries the tone. |
+| `people-ascii-preview-lf.html` | **LF Blocks preview, locked** — Marco's exact command-center settings (2026-07-23): 72-col one-color blocks, pixel fill 66%, L/F letterform details 25%, contour boost 0.15, contrast 2.5, brightness 0.65. No knobs; green/white toggle. Built by `gen_preview_lf.py`. |
 | `gen_preview.py` | Builds both preview pages — locked settings and the website palettes live at the top of the script. |
 | `lf-people-ascii-hero.html` | Standalone hero mockup — the effect as it appears in the careers page context. |
 | `gen_gallery.py` | Builds `people-ascii-gallery.html` from the clips in `clips/`. |
