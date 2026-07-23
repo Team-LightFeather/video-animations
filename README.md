@@ -9,7 +9,7 @@ ASCII-art video treatment used for the LightFeather careers "dancing people" her
 | File | Purpose |
 |---|---|
 | `people-ascii-gallery.html` | **The main deliverable** — self-contained gallery + tuner page. 9 embedded clips rendered live as ASCII, 10 style presets, full knob panel (global and per-video). Open directly in a browser — no server needed. |
-| `people-ascii-preview.html` | **The picked look, locked** — the settings exported from the tuner on 2026-07-23 (54-col pixels · ink · duo, contrast 0.65, brightness 0.75) baked in as a single preview. No knobs; just the mosaic + green/white toggle. |
+| `people-ascii-preview.html` | **The picked look, locked** — the settings exported from the tuner on 2026-07-23 (54-col pixels · ink · duo, contrast 0.65, brightness 0.75) baked in as a single preview. No knobs; just the mosaic + green/cream toggle — strictly the two brand colors, system green `#0D3E3D` and cream `#FFFBF8`. |
 | `gen_preview.py` | Builds `people-ascii-preview.html` — the locked settings live at the top of the script. |
 | `lf-people-ascii-hero.html` | Standalone hero mockup — the effect as it appears in the careers page context. |
 | `gen_gallery.py` | Builds `people-ascii-gallery.html` from the clips in `clips/`. |
