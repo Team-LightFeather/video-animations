@@ -9,13 +9,14 @@ import render_core as rc
 
 OUT = pathlib.Path(__file__).parent / "ink-blocks-command-center.html"
 
-# The version this page exists for: 44 cols, stable line strokes like the
-# original hero (or blocks), L/F letterforms at the finest details.
+# The version this page exists for: Ink Blocks at 44 cols — solid blocks for
+# the body, L/F letterforms at the silhouette edge and finest details.
+# (Lines fill remains available as an option.)
 BASE = {
     "cols": 44, "ramp": "PIXLF", "dir": "ink", "gamma": 1.5, "floor": 0.0,
-    "minOp": 0.40, "bright": 1.0, "color": "mono", "scan": 0.0, "edge": 0.0,
-    "gScale": 1.16, "weight": 400, "stab": 0.06, "smooth": 0.8, "bands": 0,
-    "blur": 1, "lfThr": 0.85, "pixFill": 0.82, "lfEdge": 0, "lfFill": "lines",
+    "minOp": 0.40, "bright": 1.15, "color": "mono", "scan": 0.0, "edge": 0.0,
+    "gScale": 1.16, "weight": 700, "stab": 0.0, "smooth": 0.0, "bands": 0,
+    "blur": 0, "lfThr": 0.75, "pixFill": 0.82, "lfEdge": 1, "lfFill": "blocks",
 }
 
 HTML = r"""<title>Ink Blocks 44 — Command Center</title>
@@ -97,7 +98,7 @@ body[data-mode="white"] footer{color:rgba(13,62,61,.45);}
 </style>
 
 <header>
-  <h1><span class="dot"></span>Ink Blocks &middot; Command Center<small>stable line strokes &middot; L/F letterform detail</small></h1>
+  <h1><span class="dot"></span>Ink Blocks &middot; Command Center<small>one-color blocks &middot; L/F letterform detail</small></h1>
   <div class="toggle" role="group" aria-label="Color mode">
     <button id="mGreen" aria-pressed="true">Green</button>
     <button id="mWhite" aria-pressed="false">White</button>
@@ -118,7 +119,7 @@ body[data-mode="white"] footer{color:rgba(13,62,61,.45);}
     <div id="json"></div>
   </aside>
 </main>
-<footer>drag Pixel size for bigger/smaller strokes &middot; Fill style = lines or blocks &middot; L/F detail = how much becomes letters &middot; G/W mode &middot; click a tile = per-video tuning &middot; auto-saves in this browser</footer>
+<footer>drag Pixel size for bigger/smaller blocks &middot; Fill style = blocks or lines &middot; L/F detail = how much becomes letters &middot; G/W mode &middot; click a tile = per-video tuning &middot; auto-saves in this browser</footer>
 
 <script>
 const BASE = __BASE__;
@@ -296,10 +297,10 @@ addEventListener("keydown", e=>{
 });
 
 // ---- persistence ----
-function save(){ try{ localStorage.setItem("lfInkBlocksCC", JSON.stringify({G,O})); }catch(e){} }
+function save(){ try{ localStorage.setItem("lfInkBlocksCC2", JSON.stringify({G,O})); }catch(e){} }
 (function restore(){
   try{
-    const st = JSON.parse(localStorage.getItem("lfInkBlocksCC")||"null");
+    const st = JSON.parse(localStorage.getItem("lfInkBlocksCC2")||"null");
     if(st && st.G){ G = Object.assign({}, BASE, st.G); O = st.O||{}; }
   }catch(e){}
 })();

@@ -58,8 +58,8 @@ VARIANTS = [
      "cols": 64, "ramp": "PIXEL", "dir": "ink", "gamma": 1.5, "floor": 0.0, "minOp": 0.40, "bright": 1.15, "color": "mono", "scan": 0.0, "edge": 0.0, "gScale": 1.16, "weight": 400, "stab": 0.0, "smooth": 0.0, "bands": 0, "blur": 0},
     {"key": "v3duo", "name": "3.9 · Duo Ink", "desc": "Ink in two tones: bright strokes over dim mint mids.",
      "cols": 60, "ramp": RAMP_FINE, "dir": "ink", "gamma": 1.5, "floor": 0.0, "minOp": 0.40, "bright": 1.1, "color": "duo", "scan": 0.0, "edge": 0.0, "gScale": 1.16, "weight": 400, "stab": 0.0, "smooth": 0.0, "bands": 0, "blur": 0},
-    {"key": "v3lf", "name": "3.10 · LF Lines", "desc": "Like the original hero: stable line strokes for the body, L and F letterforms at the finest details. Blocks fill optional.",
-     "cols": 44, "ramp": "PIXLF", "dir": "ink", "gamma": 1.5, "floor": 0.0, "minOp": 0.40, "bright": 1.0, "color": "mono", "scan": 0.0, "edge": 0.0, "gScale": 1.16, "weight": 400, "stab": 0.06, "smooth": 0.8, "bands": 0, "blur": 1, "lfThr": 0.85, "pixFill": 0.82, "lfEdge": 0, "lfFill": "lines"},
+    {"key": "v3lf", "name": "3.10 · LF Blocks", "desc": "Solid one-color blocks for the body; L and F letterforms where a block doesn't fit — the silhouette edge and the finest details.",
+     "cols": 44, "ramp": "PIXLF", "dir": "ink", "gamma": 1.5, "floor": 0.0, "minOp": 0.40, "bright": 1.15, "color": "mono", "scan": 0.0, "edge": 0.0, "gScale": 1.16, "weight": 700, "stab": 0.0, "smooth": 0.0, "bands": 0, "blur": 0, "lfThr": 0.75, "pixFill": 0.82, "lfEdge": 1, "lfFill": "blocks"},
 ]
 
 
