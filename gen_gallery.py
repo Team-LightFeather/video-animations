@@ -120,7 +120,7 @@ const PALS = {
   white: {bright:"13,62,61", dim:"96,132,127"},
 };
 const RAMPS = {fine:" .·:-=+i1lvtfcLF#", blocky:" .:-=+*%#@", brand:" .:=iltLF#"};
-const FIELDS = ["cols","ramp","dir","gamma","floor","minOp","bright","color","scan","edge","gScale","weight","stab","smooth","bands","blur","lfThr","pixFill"];
+const FIELDS = ["cols","ramp","dir","gamma","floor","minOp","bright","color","scan","edge","gScale","weight","stab","smooth","bands","blur","lfThr","pixFill","lfEdge"];
 const KNOBS = [
   {f:"cols",   label:"Pixel size",    min:32, max:96, step:2, rtl:true, fmt:v=>v+" cols"},
   {f:"gamma",  label:"Contrast",      min:0.4, max:2.5, step:0.05, fmt:v=>v.toFixed(2)},

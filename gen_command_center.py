@@ -14,7 +14,7 @@ BASE = {
     "cols": 44, "ramp": "PIXLF", "dir": "ink", "gamma": 1.5, "floor": 0.0,
     "minOp": 0.40, "bright": 1.15, "color": "mono", "scan": 0.0, "edge": 0.0,
     "gScale": 1.16, "weight": 700, "stab": 0.0, "smooth": 0.0, "bands": 0,
-    "blur": 0, "lfThr": 0.55, "pixFill": 0.82,
+    "blur": 0, "lfThr": 0.75, "pixFill": 0.82, "lfEdge": 1,
 }
 
 HTML = r"""<title>Ink Blocks 44 — Command Center</title>
@@ -224,6 +224,9 @@ GROUPS.forEach(g=>{
   });
   if(g.title==="Pixel grid"){
     sec.appendChild(segEl("Detail mode", [{label:"L/F letters",value:"PIXLF"},{label:"Plain blocks",value:"PIXEL"}], "ramp", ()=>effSel().ramp));
+  }
+  if(g.title==="Letter detail"){
+    sec.appendChild(segEl("L/F where blocks don't fit (edges)", [{label:"On",value:1},{label:"Off",value:0}], "lfEdge", ()=>String(effSel().lfEdge==null?1:effSel().lfEdge)));
   }
   if(g.title==="Motion"){
     sec.appendChild(segEl("Noise blur", [{label:"Off",value:0},{label:"On",value:1}], "blur", ()=>String(effSel().blur||0)));
