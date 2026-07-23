@@ -58,8 +58,8 @@ VARIANTS = [
      "cols": 64, "ramp": "PIXEL", "dir": "ink", "gamma": 1.5, "floor": 0.0, "minOp": 0.40, "bright": 1.15, "color": "mono", "scan": 0.0, "edge": 0.0, "gScale": 1.16, "weight": 400, "stab": 0.0, "smooth": 0.0, "bands": 0, "blur": 0},
     {"key": "v3duo", "name": "3.9 · Duo Ink", "desc": "Ink in two tones: bright strokes over dim mint mids.",
      "cols": 60, "ramp": RAMP_FINE, "dir": "ink", "gamma": 1.5, "floor": 0.0, "minOp": 0.40, "bright": 1.1, "color": "duo", "scan": 0.0, "edge": 0.0, "gScale": 1.16, "weight": 400, "stab": 0.0, "smooth": 0.0, "bands": 0, "blur": 0},
-    {"key": "v3lf", "name": "3.10 · LF Blocks", "desc": "Ink Blocks evolved: solid one-color blocks for the body; L and F letterforms where a block doesn't fit — the silhouette edge and the finest details.",
-     "cols": 44, "ramp": "PIXLF", "dir": "ink", "gamma": 1.5, "floor": 0.0, "minOp": 0.40, "bright": 1.15, "color": "mono", "scan": 0.0, "edge": 0.0, "gScale": 1.16, "weight": 700, "stab": 0.0, "smooth": 0.0, "bands": 0, "blur": 0, "lfThr": 0.75, "pixFill": 0.82, "lfEdge": 1},
+    {"key": "v3lf", "name": "3.10 · LF Lines", "desc": "Like the original hero: stable line strokes for the body, L and F letterforms at the finest details. Blocks fill optional.",
+     "cols": 44, "ramp": "PIXLF", "dir": "ink", "gamma": 1.5, "floor": 0.0, "minOp": 0.40, "bright": 1.0, "color": "mono", "scan": 0.0, "edge": 0.0, "gScale": 1.16, "weight": 400, "stab": 0.06, "smooth": 0.8, "bands": 0, "blur": 1, "lfThr": 0.85, "pixFill": 0.82, "lfEdge": 0, "lfFill": "lines"},
 ]
 
 
@@ -274,7 +274,9 @@ function renderTile(t, V){
         rlen=(isPix||isLF)?32:RAMP.length, inv=1/(rlen-1);
   const lfT=V.lfThr!=null?V.lfThr:0.55, pixSide=cell*(V.pixFill!=null?V.pixFill:0.82),
         pixPad=(cell-pixSide)/2, pixA=Math.min(1,0.92*(V.bright||1)),
-        lfEdgeOn=isLF&&(V.lfEdge==null||V.lfEdge>0);
+        lfEdgeOn=isLF&&V.lfEdge!=null&&V.lfEdge>0,
+        lfLines=isLF&&V.lfFill!=="blocks",
+        LNR=" .·:-=+i1lvtfc";
   const N=(V.bands|0), useQ=N>=3;
   const eThr=0.34-0.30*(V.edge||0);
   ctx.clearRect(0,0,t.cw,t.ch);
@@ -310,8 +312,9 @@ function renderTile(t, V){
       const side=sideBase*(0.55+0.45*gc), pad=(cell-side)/2;
       ctx.fillRect(ox+x*cell+pad, oy+y*cell+pad, side, side);
     } else if(isLF){
-      // blocks mainly; L/F letterforms where a block doesn't fit — the
-      // silhouette boundary (lfEdge) and the strongest detail cells (lfThr)
+      // body fill (lines like the original hero, or flat blocks); L/F
+      // letterforms take over at the finest details (lfThr) and, optionally,
+      // the silhouette boundary where a block/stroke doesn't fit (lfEdge)
       let bnd=0;
       if(lfEdgeOn){
         for(let dy=-1;dy<=1&&!bnd;dy++)for(let dx=-1;dx<=1;dx++){
@@ -323,8 +326,16 @@ function renderTile(t, V){
         ctx.fillStyle="rgba("+col+","+Math.min(1,(V.bright||1)).toFixed(2)+")";
         ctx.fillText(((x+y)&1)?"F":"L", ox+x*cell, oy+y*cell);
       } else if(gi>0){
-        ctx.fillStyle="rgba("+col+","+pixA.toFixed(2)+")";
-        ctx.fillRect(ox+x*cell+pixPad, oy+y*cell+pixPad, pixSide, pixSide);
+        if(lfLines){
+          const li=Math.round(gc*(LNR.length-1));
+          if(li>0){
+            ctx.fillStyle="rgba("+col+","+a.toFixed(2)+")";
+            ctx.fillText(LNR[li], ox+x*cell, oy+y*cell);
+          }
+        } else {
+          ctx.fillStyle="rgba("+col+","+pixA.toFixed(2)+")";
+          ctx.fillRect(ox+x*cell+pixPad, oy+y*cell+pixPad, pixSide, pixSide);
+        }
       }
     } else ctx.fillText(RAMP[gi], ox+x*cell, oy+y*cell);
   }
