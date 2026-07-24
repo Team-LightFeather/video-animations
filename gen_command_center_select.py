@@ -31,7 +31,8 @@ def duration(stem: str) -> float:
     return float(out.strip().rstrip(","))
 
 
-LOOP_DEFAULT = round(min(duration(s) for s in rc.STEMS), 1)
+DURS = {s: round(duration(s), 2) for s in rc.STEMS}
+LOOP_DEFAULT = round(min(DURS.values()), 1)
 
 # The locked LF Blocks preview settings (2026-07-23) + playback fields.
 BASE = {
@@ -150,6 +151,7 @@ body[data-mode="white"] footer{color:rgba(13,62,61,.45);}
 const BASE = __BASE__;
 const CLIPS = __CLIPS__;
 const STEMS = __STEMS__;
+const DURS = __DURS__;
 const END_AUTO = __END_AUTO__;
 __CORE__
 const PALS = {
@@ -250,7 +252,7 @@ addEventListener("click", ()=>tiles.forEach(t=>{ if(t.src.paused && !reduce) t.s
 // ---- command rail ----
 const groupsEl = document.getElementById("groups"), inputs = {};
 groupsEl.style.display="flex"; groupsEl.style.flexDirection="column"; groupsEl.style.gap="10px";
-const segUpdaters = [];
+const segUpdaters = [], clipStarts = [];
 function segEl(label, opts, field, getVal){
   const wrap = document.createElement("div"); wrap.className="seg";
   const lb = document.createElement("label"); lb.textContent=label;
@@ -306,7 +308,39 @@ GROUPS.forEach(g=>{
     sec.appendChild(segEl("Noise blur", [{label:"Off",value:0},{label:"On",value:1}], "blur", ()=>String(effSel().blur||0)));
   }
   groupsEl.appendChild(sec);
+  if(g.title==="Playback"){
+    // per-clip start times, always visible — one slider per person
+    const cs = document.createElement("div"); cs.className="sec";
+    const cst = document.createElement("div"); cst.className="st"; cst.textContent="Clip start times";
+    cs.appendChild(cst);
+    STEMS.forEach((name,i)=>{
+      const w = document.createElement("div"); w.className="knob";
+      const row = document.createElement("div"); row.className="row";
+      const lb = document.createElement("label"); lb.textContent = name;
+      const val = document.createElement("span"); val.className="val";
+      row.appendChild(lb); row.appendChild(val);
+      const inp = document.createElement("input");
+      inp.type="range"; inp.min=0; inp.max=Math.max(0.5,(DURS[name]||END_AUTO)-0.4); inp.step=0.1;
+      inp.addEventListener("input", ()=>{
+        const v = parseFloat(inp.value);
+        (O[i] = O[i]||{}).start = v;
+        resetTone(tiles[i]); redraw(i); markTweaks(); save(); updateJson();
+        val.textContent = v.toFixed(1)+"s";
+        if(sel===i) refreshPanel();
+      });
+      w.appendChild(row); w.appendChild(inp);
+      cs.appendChild(w);
+      clipStarts.push({inp, val, i});
+    });
+    groupsEl.appendChild(cs);
+  }
 });
+function updateClipStarts(){
+  clipStarts.forEach(c=>{
+    const v = eff(c.i).start||0;
+    c.inp.value = v; c.val.textContent = v.toFixed(1)+"s";
+  });
+}
 function effSel(){ return sel==null ? G : eff(sel); }
 function winSel(){
   const d = sel==null ? END_AUTO : (tiles[sel].src.duration || END_AUTO);
@@ -333,6 +367,7 @@ function refreshPanel(){
   document.getElementById("scopeLbl").textContent = sel==null ? "Tuning: all videos" : "Tuning: "+(sel+1)+" · "+STEMS[sel];
   document.getElementById("backAll").style.display = sel==null ? "none" : "";
   document.getElementById("resetVid").style.display = sel==null ? "none" : "";
+  updateClipStarts();
   updateJson();
 }
 function select(i){
@@ -399,6 +434,7 @@ html = (HTML
         .replace("__STEMS__", json.dumps(rc.STEMS))
         .replace("__CLIPS__", rc.build_clips("video"))
         .replace("__CORE__", rc.JS_CORE)
+        .replace("__DURS__", json.dumps(DURS))
         .replace("__END_AUTO__", json.dumps(END_AUTO)))
 OUT.write_text(html)
 print("wrote", OUT, f"{OUT.stat().st_size/1024:.0f} KB",
