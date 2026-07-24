@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""BIG-PIXEL clone of the SELECT command center (gen_command_center_select.py).
-Identical page, except: pixel size is bigger (BASE cols 48 instead of 72) and
-the Pixel size slider reaches further (down to 12 cols = huge pixels). Writes
-its own HTML file and uses its own localStorage key (lfSelectCC2BP) so it can
-NEVER touch Marco's tuned settings on the original command center.
+"""EXTENDED-RANGE clone of the SELECT command center
+(gen_command_center_select.py). Identical page — same BASE (72 cols) — except
+the Pixel size slider goes past 96 up to 120 cols (finer grid). Writes its own
+HTML file and uses its own localStorage key (lfSelectCC2BP) so it can NEVER
+touch Marco's tuned settings on the original command center.
 
 Playback is driven by a MASTER CLOCK so every video loops in sync: one global
 Loop length (default = the shortest take), and per-video Start / End / Speed.
@@ -38,14 +38,14 @@ LOOP_DEFAULT = round(min(DURS.values()), 1)
 
 # The locked LF Blocks preview settings (2026-07-23) + playback fields.
 BASE = {
-    "cols": 48, "ramp": "PIXLF", "dir": "ink", "gamma": 2.5, "floor": 0.0,
+    "cols": 72, "ramp": "PIXLF", "dir": "ink", "gamma": 2.5, "floor": 0.0,
     "minOp": 0.10, "bright": 0.65, "color": "mono", "scan": 0, "edge": 0.15,
     "gScale": 1.28, "weight": 700, "stab": 0, "smooth": 0, "bands": 0,
     "blur": 0, "lfThr": 0.75, "pixFill": 0.66, "lfEdge": 0, "lfFill": "blocks",
     "loopLen": LOOP_DEFAULT, "start": 0, "end": END_AUTO,
 }
 
-HTML = r"""<title>LF Select — Command Center · Big Pixels</title>
+HTML = r"""<title>LF Select — Command Center · 120-col range</title>
 <style>
 __FONTS__
 *{box-sizing:border-box;}
@@ -126,7 +126,7 @@ body[data-mode="white"] footer{color:rgba(13,62,61,.45);}
 </style>
 
 <header>
-  <h1><span class="dot"></span>LF Select &middot; Command Center &middot; Big Pixels<small>Marco &middot; Nate &middot; Ruben &middot; Sheelagh &middot; Isaiah &middot; synced loops</small></h1>
+  <h1><span class="dot"></span>LF Select &middot; Command Center &middot; 120-col range<small>Marco &middot; Nate &middot; Ruben &middot; Sheelagh &middot; Isaiah &middot; synced loops</small></h1>
   <div class="toggle" role="group" aria-label="Color mode">
     <button id="mGreen" aria-pressed="true">Green</button>
     <button id="mWhite" aria-pressed="false">White</button>
@@ -163,7 +163,7 @@ const PALS = {
 const FIELDS = Object.keys(BASE);
 const GROUPS = [
   {title:"Pixel grid", knobs:[
-    {f:"cols",    label:"Pixel size",   min:12, max:96, step:2, rtl:true, hero:true, fmt:v=>Math.round(v)+"<small>cols</small>"},
+    {f:"cols",    label:"Pixel size",   min:24, max:120, step:2, rtl:true, hero:true, fmt:v=>Math.round(v)+"<small>cols</small>"},
     {f:"pixFill", label:"Pixel fill",   min:0.4, max:1, step:0.02, fmt:v=>Math.round(v*100)+"%"},
   ]},
   {title:"Playback", note:"All videos share one loop. Start/End choose the slice of a take; its speed auto-derives so everything stays in sync. Speed moves End for you.", knobs:[
