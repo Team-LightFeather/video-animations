@@ -127,7 +127,10 @@ function initTile(clip, c, srcEl){
   const pw=Math.max(2,Math.round(clip.bgw*0.16)), ph=Math.max(2,Math.round(clip.bgh*0.12)), tl=[], tr=[];
   for(let y=0;y<ph;y++){for(let x=0;x<pw;x++)tl.push(bg[y*clip.bgw+x]/255); for(let x=clip.bgw-pw;x<clip.bgw;x++)tr.push(bg[y*clip.bgw+x]/255);}
   const wall=Math.max(median(tl),median(tr));
-  return {clip, c, ctx:c.getContext("2d"), src:srcEl, bg, wall,
+  // wd = dark-wall clip (e.g. Ruben's 2026-07-24 take: gray wall, white shirt).
+  // The luma-only "darker than wall" mask inverts on these; they use a
+  // chroma+extremes mask in renderTile instead.
+  return {clip, c, ctx:c.getContext("2d"), src:srcEl, bg, wall, wd:wall<0.55,
           solid:Math.min(0.86,Math.max(0.42,wall-(clip.mg||MASK.margin))),
           cw:0, ch:0, n:0, lo:null, hi:null, ready:false, emaOk:false, lastT:0};
 }
@@ -188,7 +191,16 @@ function renderTile(t, V){
   const byf = y => Math.min(bgh-1, Math.round(y*(bgh-1)/Math.max(1,rows-1)));
   // -- shared isolation pipeline (identical for every variant, runs on smoothed luma) --
   const S=V.stab||0;
-  if(S>0){
+  if(t.wd){
+    // dark-wall clip: the wall is a neutral mid-gray, so "darker than wall"
+    // inverts. Keep cells with real chroma (skin) or extreme luma (white
+    // shirt / dark hair); the flat gray wall and pad bars have neither.
+    if(!t.satA || t.satA.length!==n) t.satA=new Float32Array(n);
+    for(let k=0;k<n;k++){const i=k*4;
+      const mx=Math.max(data[i],data[i+1],data[i+2]), mn=Math.min(data[i],data[i+1],data[i+2]);
+      t.satA[k]=(mx-mn)/255;}
+    for(let k=0;k<n;k++) keep[k]=(t.satA[k]>0.10 || ema[k]>0.66 || ema[k]<0.18)?1:0;
+  } else if(S>0){
     // hysteresis: a cell flips its kept-state only when it clearly crosses the cutoff
     for(let k=0;k<n;k++) keep[k]=(t.pKeep[k]?ema[k]<t.solid+S*0.5:ema[k]<t.solid-S*0.5)?1:0;
   } else {
@@ -217,15 +229,17 @@ function renderTile(t, V){
     }
   }
   tmp.set(keep);
-  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
-    const k=y*cols+x;
-    if(!keep[k] || ema[k]<t.solid-MASK.fringe) continue;
-    let edge=0;
-    for(let dy=-1;dy<=1&&!edge;dy++)for(let dx=-1;dx<=1;dx++){
-      const nx=x+dx, ny=y+dy;
-      if(nx<0||ny<0||nx>=cols||ny>=rows||!keep[ny*cols+nx]){edge=1;break;}
+  if(!t.wd){  // fringe-eater assumes a bright wall; skip on dark-wall clips
+    for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
+      const k=y*cols+x;
+      if(!keep[k] || ema[k]<t.solid-MASK.fringe) continue;
+      let edge=0;
+      for(let dy=-1;dy<=1&&!edge;dy++)for(let dx=-1;dx<=1;dx++){
+        const nx=x+dx, ny=y+dy;
+        if(nx<0||ny<0||nx>=cols||ny>=rows||!keep[ny*cols+nx]){edge=1;break;}
+      }
+      if(edge) tmp[k]=0;
     }
-    if(edge) tmp[k]=0;
   }
   keep.set(tmp);
   lbl.fill(0);
@@ -288,6 +302,9 @@ function renderTile(t, V){
     if(!keep[k]){ t.pGi[k]=-1; continue; }
     const brv=Math.min(1,Math.max(0,(ema[k]-t.lo)/rng));
     let d=V.dir==="ink"?1-brv:brv;
+    // dark-wall clips: ink = distance from the wall's mid-gray, so dark hair
+    // AND bright clothing both read dense while midtone skin stays light
+    if(t.wd) d=Math.min(1,Math.abs(brv-0.5)*2);
     d=Math.pow(smooth(d),V.gamma);
     // contour cells bypass quantization and keep the full glyph range
     const isEdge=V.edge>0 && t.grd[k]>=eThr;

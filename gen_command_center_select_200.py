@@ -23,7 +23,7 @@ import render_core as rc
 OUT = pathlib.Path(__file__).parent / "lf-select-command-center-200.html"
 
 rc.CLIPS_DIR = pathlib.Path("/Users/marcoopertti/LF-Website/quality_test_outputs/nv2select")
-rc.STEMS = ["Marco", "Nate", "Ruben", "Sheelagh", "Isaiah", "Ryan"]
+rc.STEMS = ["Marco", "Nate", "Ruben", "Sheelagh", "Isaiah", "Ryan", "Morgan"]
 
 END_AUTO = 6.5  # End-knob max = "auto": window ends start+loopLen into the take
 
@@ -72,9 +72,9 @@ body[data-mode="white"] .toggle{border-color:rgba(13,62,61,.3);}
 body[data-mode="white"] .toggle button[aria-pressed="true"]{background:#2FC189;color:#fff;}
 main{flex:1;display:flex;gap:16px;padding:0 clamp(14px,2.5vw,30px) 16px;align-items:stretch;min-height:0;}
 #stageWrap{flex:1;display:flex;align-items:center;justify-content:center;min-width:0;}
-#mosaic{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);
-  gap:clamp(6px,0.8vw,10px);width:100%;max-width:calc((100vh - 150px)*1296/908);
-  aspect-ratio:1296/908;max-height:calc(100vh - 150px);}
+#mosaic{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(2,1fr);
+  gap:clamp(6px,0.8vw,10px);width:100%;max-width:calc((100vh - 150px)*1728/908);
+  aspect-ratio:1728/908;max-height:calc(100vh - 150px);}
 .ptile{position:relative;overflow:hidden;border-radius:9px;cursor:pointer;}
 .ptile canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
 .ptile.sel{outline:2px solid #00FFA8;outline-offset:2px;}
@@ -139,7 +139,7 @@ body[data-mode="white"] footer{color:rgba(13,62,61,.45);}
 </style>
 
 <header>
-  <h1><span class="dot"></span>LF Select &middot; Command Center &middot; 200 cols + colors<small>Marco &middot; Nate &middot; Ruben &middot; Sheelagh &middot; Isaiah &middot; Ryan &middot; synced loops</small></h1>
+  <h1><span class="dot"></span>LF Select &middot; Command Center &middot; 200 cols + colors<small>Marco &middot; Nate &middot; Ruben &middot; Sheelagh &middot; Isaiah &middot; Ryan &middot; Morgan &middot; synced loops</small></h1>
   <div class="toggle" role="group" aria-label="Color mode">
     <button id="mGreen" aria-pressed="true">Green</button>
     <button id="mWhite" aria-pressed="false">White</button>
