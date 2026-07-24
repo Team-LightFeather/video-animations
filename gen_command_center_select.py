@@ -1,30 +1,45 @@
 #!/usr/bin/env python3
-"""Build the SELECT command center: the newvids2 finals only (Nate, Ruben,
-Sheelagh, Isaiah — Nate/Ruben widened to the square tile, not cropped), in a
-2x2 mosaic. Starts on the locked LF-Blocks preview preset (gen_preview_lf.py)
-and adds a Clip length knob (global AND per-video) that decides how much of
-each video is incorporated before it loops."""
+"""Build the SELECT command center: the newvids2 finals (Marco, Nate, Ruben,
+Sheelagh, Isaiah — Nate/Ruben widened to the square tile, not cropped) in a
+3x2 mosaic, starting on the locked LF-Blocks preview preset.
+
+Playback is driven by a MASTER CLOCK so every video loops in sync: one global
+Loop length (default = the shortest take), and per-video Start / End / Speed.
+Each video plays the window [start, end] of its take fitted to the shared
+period — its playback rate auto-derives from the window length, so adjusting
+where a clip starts/ends (or how fast it goes) never breaks the sync."""
 import json
 import pathlib
+import subprocess
 
 import render_core as rc
 
 OUT = pathlib.Path(__file__).parent / "lf-select-command-center.html"
 
-# Clips: quality_test_outputs/nv2select, produced by tools/level_clips.py
-# (--pad for Nate/Ruben: wall-colored widening to 718:754, no crop).
 rc.CLIPS_DIR = pathlib.Path("/Users/marcoopertti/LF-Website/quality_test_outputs/nv2select")
-rc.STEMS = ["Nate", "Ruben", "Sheelagh", "Isaiah"]
+rc.STEMS = ["Marco", "Nate", "Ruben", "Sheelagh", "Isaiah"]
 
-DUR_FULL = 6.5  # knob max; >= longest clip (Isaiah 6.3s) -> "full"
+END_AUTO = 6.5  # End-knob max = "auto": window ends start+loopLen into the take
 
-# The locked LF Blocks preview settings (Marco's 2026-07-23 export) + dur.
+
+def duration(stem: str) -> float:
+    out = subprocess.run(
+        ["ffprobe", "-v", "error", "-select_streams", "v:0",
+         "-show_entries", "stream=duration", "-of", "csv=p=0",
+         str(rc.CLIPS_DIR / f"{stem}.mp4")],
+        check=True, capture_output=True, text=True).stdout
+    return float(out.strip().rstrip(","))
+
+
+LOOP_DEFAULT = round(min(duration(s) for s in rc.STEMS), 1)
+
+# The locked LF Blocks preview settings (2026-07-23) + playback fields.
 BASE = {
     "cols": 72, "ramp": "PIXLF", "dir": "ink", "gamma": 2.5, "floor": 0.0,
     "minOp": 0.10, "bright": 0.65, "color": "mono", "scan": 0, "edge": 0.15,
     "gScale": 1.28, "weight": 700, "stab": 0, "smooth": 0, "bands": 0,
     "blur": 0, "lfThr": 0.75, "pixFill": 0.66, "lfEdge": 0, "lfFill": "blocks",
-    "dur": DUR_FULL,
+    "loopLen": LOOP_DEFAULT, "start": 0, "end": END_AUTO,
 }
 
 HTML = r"""<title>LF Select — Command Center</title>
@@ -50,9 +65,9 @@ body[data-mode="white"] .toggle{border-color:rgba(13,62,61,.3);}
 body[data-mode="white"] .toggle button[aria-pressed="true"]{background:#2FC189;color:#fff;}
 main{flex:1;display:flex;gap:16px;padding:0 clamp(14px,2.5vw,30px) 16px;align-items:stretch;min-height:0;}
 #stageWrap{flex:1;display:flex;align-items:center;justify-content:center;min-width:0;}
-#mosaic{display:grid;grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(2,1fr);
-  gap:clamp(6px,0.8vw,10px);width:100%;max-width:calc((100vh - 150px)*432/454);
-  aspect-ratio:432/454;max-height:calc(100vh - 150px);}
+#mosaic{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);
+  gap:clamp(6px,0.8vw,10px);width:100%;max-width:calc((100vh - 150px)*1296/908);
+  aspect-ratio:1296/908;max-height:calc(100vh - 150px);}
 .ptile{position:relative;overflow:hidden;border-radius:9px;cursor:pointer;}
 .ptile canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
 .ptile.sel{outline:2px solid #00FFA8;outline-offset:2px;}
@@ -75,6 +90,8 @@ body[data-mode="white"] .sec{border-color:rgba(13,62,61,.16);}
 .sec .st{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
   color:#8FB9AB;}
 body[data-mode="white"] .sec .st{color:#4E6E67;}
+.sec .note{font-size:10px;color:#8FB9AB;line-height:1.4;margin-top:-3px;}
+body[data-mode="white"] .sec .note{color:#4E6E67;}
 .knob{display:flex;flex-direction:column;gap:2px;}
 .knob .row{display:flex;justify-content:space-between;align-items:baseline;}
 .knob label{font-weight:600;}
@@ -106,7 +123,7 @@ body[data-mode="white"] footer{color:rgba(13,62,61,.45);}
 </style>
 
 <header>
-  <h1><span class="dot"></span>LF Select &middot; Command Center<small>Nate &middot; Ruben &middot; Sheelagh &middot; Isaiah &middot; locked preview preset</small></h1>
+  <h1><span class="dot"></span>LF Select &middot; Command Center<small>Marco &middot; Nate &middot; Ruben &middot; Sheelagh &middot; Isaiah &middot; synced loops</small></h1>
   <div class="toggle" role="group" aria-label="Color mode">
     <button id="mGreen" aria-pressed="true">Green</button>
     <button id="mWhite" aria-pressed="false">White</button>
@@ -127,13 +144,13 @@ body[data-mode="white"] footer{color:rgba(13,62,61,.45);}
     <div id="json"></div>
   </aside>
 </main>
-<footer>starts on the locked preview preset &middot; Clip length = how much of each video plays before looping (per-video too) &middot; G/W mode &middot; click a tile = per-video tuning &middot; auto-saves in this browser</footer>
+<footer>one shared loop (Loop length, default = shortest take) keeps every video in sync &middot; Start/End/Speed per video pick which slice of a take plays &mdash; the rate auto-derives so sync never breaks &middot; G/W mode &middot; click a tile = per-video tuning</footer>
 
 <script>
 const BASE = __BASE__;
 const CLIPS = __CLIPS__;
 const STEMS = __STEMS__;
-const DUR_FULL = __DUR_FULL__;
+const END_AUTO = __END_AUTO__;
 __CORE__
 const PALS = {
   green: {bright:"255,255,255", dim:"148,224,196"},
@@ -144,6 +161,12 @@ const GROUPS = [
   {title:"Pixel grid", knobs:[
     {f:"cols",    label:"Pixel size",   min:24, max:96, step:2, rtl:true, hero:true, fmt:v=>Math.round(v)+"<small>cols</small>"},
     {f:"pixFill", label:"Pixel fill",   min:0.4, max:1, step:0.02, fmt:v=>Math.round(v*100)+"%"},
+  ]},
+  {title:"Playback", note:"All videos share one loop. Start/End choose the slice of a take; its speed auto-derives so everything stays in sync. Speed moves End for you.", knobs:[
+    {f:"loopLen", label:"Loop length (all)", min:1, max:6.3, step:0.1, fmt:v=>v.toFixed(1)+"s"},
+    {f:"start",   label:"Start",  min:0, max:5.5, step:0.1, fmt:v=>v.toFixed(1)+"s"},
+    {f:"end",     label:"End",    min:0.5, max:6.5, step:0.1, fmt:v=>v>=END_AUTO?"auto":v.toFixed(1)+"s"},
+    {f:"speed",   label:"Speed",  min:0.4, max:2, step:0.05, fmt:v=>v.toFixed(2)+"×"},
   ]},
   {title:"Letter detail", knobs:[
     {f:"lfThr",  label:"L/F detail",     min:0.15, max:0.9, step:0.05, rtl:true, fmt:v=>Math.round((1-v)*100)+"%"},
@@ -158,7 +181,6 @@ const GROUPS = [
     {f:"minOp",  label:"Min opacity", min:0.1, max:0.95, step:0.05, fmt:v=>v.toFixed(2)},
   ]},
   {title:"Motion", knobs:[
-    {f:"dur",    label:"Clip length", min:1, max:__DUR_FULL__, step:0.1, fmt:v=>v>=__DUR_FULL__?"full":v.toFixed(1)+"s"},
     {f:"smooth", label:"Smoothing",   min:0, max:0.95, step:0.05, fmt:v=>v?v.toFixed(2):"off"},
     {f:"stab",   label:"Stability",   min:0, max:0.15, step:0.01, fmt:v=>v?v.toFixed(2):"live"},
   ]},
@@ -190,19 +212,37 @@ CLIPS.forEach((clip,i)=>{
   tiles.push(t); mosaic.appendChild(el);
 });
 window.__tiles = tiles;  // for headless verification scripts
-// Clip length: loop each video after its configured slice of the take
-function clampLoops(){
+
+// ---- master clock: every video loops on the same period ----
+const t0 = performance.now();
+function loopLen(){ return Math.max(0.5, G.loopLen || 1); }
+function playWin(i, d){
+  // the slice of take i that plays each period, and the rate that fits it
+  const s = eff(i);
+  const st = Math.min(s.start||0, Math.max(0, d-0.4));
+  const en = (s.end==null || s.end>=END_AUTO)
+    ? Math.min(d, st + loopLen())
+    : Math.min(Math.max(s.end, st+0.2), d);
+  return {st, en, rate: Math.min(4, Math.max(0.25, (en-st)/loopLen()))};
+}
+function syncClock(){
+  if(reduce) return;
+  const phi = ((performance.now()-t0)/1000) % loopLen();
   tiles.forEach((t,i)=>{
-    const d = eff(i).dur;
-    if(d && d < DUR_FULL && t.src.currentTime > d){
-      try{ t.src.currentTime = 0; }catch(e){}
+    const d = t.src.duration;
+    if(!d || t.src.readyState<2) return;
+    const w = playWin(i, d);
+    if(Math.abs(t.src.playbackRate - w.rate) > 0.01) t.src.playbackRate = w.rate;
+    const target = Math.min(w.en - 0.03, w.st + phi*w.rate);
+    if(Math.abs(t.src.currentTime - target) > 0.13){
+      try{ t.src.currentTime = target; }catch(e){}
     }
   });
 }
-setInterval(clampLoops, 100);
+setInterval(syncClock, 200);
 function redraw(only){ tiles.forEach((t,i)=>{ if(only==null||only===i) renderTile(t, eff(i)); }); }
 let last=0;
-function loop(ts){ if(ts-last>85){ last=ts; clampLoops(); redraw(); } requestAnimationFrame(loop); }
+function loop(ts){ if(ts-last>85){ last=ts; syncClock(); redraw(); } requestAnimationFrame(loop); }
 if(!reduce) requestAnimationFrame(loop);
 addEventListener("resize", ()=>tiles.forEach(sizeTile));
 addEventListener("click", ()=>tiles.forEach(t=>{ if(t.src.paused && !reduce) t.src.play().catch(()=>{}); }));
@@ -231,6 +271,7 @@ GROUPS.forEach(g=>{
   const sec = document.createElement("div"); sec.className="sec";
   const st = document.createElement("div"); st.className="st"; st.textContent=g.title;
   sec.appendChild(st);
+  if(g.note){ const n=document.createElement("div"); n.className="note"; n.textContent=g.note; sec.appendChild(n); }
   g.knobs.forEach(k=>{
     const w = document.createElement("div"); w.className="knob"+(k.hero?" hero":"");
     const row = document.createElement("div"); row.className="row";
@@ -240,7 +281,17 @@ GROUPS.forEach(g=>{
     const inp = document.createElement("input");
     inp.type="range"; inp.min=k.min; inp.max=k.max; inp.step=k.step;
     if(k.rtl) inp.style.direction="rtl";
-    inp.addEventListener("input", ()=>{ setField(k.f, parseFloat(inp.value)); val.innerHTML = k.fmt(parseFloat(inp.value)); });
+    inp.addEventListener("input", ()=>{
+      const v = parseFloat(inp.value);
+      if(k.f==="speed"){
+        // Speed is a view on the window: it moves End so sync is preserved
+        const wv = winSel();
+        setField("end", Math.min(END_AUTO-0.01, Math.max(0.5, wv.st + loopLen()*v)));
+      } else {
+        setField(k.f, v);
+      }
+      val.innerHTML = k.fmt(v);
+    });
     w.appendChild(row); w.appendChild(inp);
     sec.appendChild(w);
     inputs[k.f] = {inp, val, fmt:k.fmt};
@@ -257,14 +308,27 @@ GROUPS.forEach(g=>{
   groupsEl.appendChild(sec);
 });
 function effSel(){ return sel==null ? G : eff(sel); }
+function winSel(){
+  const d = sel==null ? END_AUTO : (tiles[sel].src.duration || END_AUTO);
+  return playWin(sel==null ? -1 : sel, d);
+}
 function setField(f, v){
-  if(sel==null){ G[f]=v; tiles.forEach(resetTone); redraw(); }
-  else { (O[sel] = O[sel]||{})[f]=v; resetTone(tiles[sel]); redraw(sel); markTweaks(); }
+  if(f==="loopLen"){ G[f]=v; }                       // sync period is global-only
+  else if(sel==null){ G[f]=v; }
+  else { (O[sel] = O[sel]||{})[f]=v; markTweaks(); }
+  if(sel==null){ tiles.forEach(resetTone); redraw(); }
+  else { resetTone(tiles[sel]); redraw(sel); }
   save(); updateJson();
 }
 function refreshPanel(){
   const s = effSel();
-  Object.keys(inputs).forEach(f=>{ inputs[f].inp.value = s[f]; inputs[f].val.innerHTML = inputs[f].fmt(s[f]); });
+  Object.keys(inputs).forEach(f=>{
+    if(f==="speed") return;
+    inputs[f].inp.value = s[f]; inputs[f].val.innerHTML = inputs[f].fmt(s[f]);
+  });
+  const w = winSel();
+  inputs.speed.inp.value = w.rate;
+  inputs.speed.val.innerHTML = inputs.speed.fmt(w.rate);
   segUpdaters.forEach(u=>u());
   document.getElementById("scopeLbl").textContent = sel==null ? "Tuning: all videos" : "Tuning: "+(sel+1)+" · "+STEMS[sel];
   document.getElementById("backAll").style.display = sel==null ? "none" : "";
@@ -318,10 +382,10 @@ addEventListener("keydown", e=>{
 });
 
 // ---- persistence ----
-function save(){ try{ localStorage.setItem("lfSelectCC1", JSON.stringify({G,O})); }catch(e){} }
+function save(){ try{ localStorage.setItem("lfSelectCC2", JSON.stringify({G,O})); }catch(e){} }
 (function restore(){
   try{
-    const st = JSON.parse(localStorage.getItem("lfSelectCC1")||"null");
+    const st = JSON.parse(localStorage.getItem("lfSelectCC2")||"null");
     if(st && st.G){ G = Object.assign({}, BASE, st.G); O = st.O||{}; }
   }catch(e){}
 })();
@@ -335,6 +399,7 @@ html = (HTML
         .replace("__STEMS__", json.dumps(rc.STEMS))
         .replace("__CLIPS__", rc.build_clips("video"))
         .replace("__CORE__", rc.JS_CORE)
-        .replace("__DUR_FULL__", json.dumps(DUR_FULL)))
+        .replace("__END_AUTO__", json.dumps(END_AUTO)))
 OUT.write_text(html)
-print("wrote", OUT, f"{OUT.stat().st_size/1024:.0f} KB")
+print("wrote", OUT, f"{OUT.stat().st_size/1024:.0f} KB",
+      f"(loop default {LOOP_DEFAULT}s)")
