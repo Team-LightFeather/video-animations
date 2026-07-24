@@ -23,7 +23,7 @@ import render_core as rc
 OUT = pathlib.Path(__file__).parent / "lf-select-command-center-200.html"
 
 rc.CLIPS_DIR = pathlib.Path("/Users/marcoopertti/LF-Website/quality_test_outputs/nv2select")
-rc.STEMS = ["Marco", "Nate", "Ruben", "Sheelagh", "Isaiah"]
+rc.STEMS = ["Marco", "Nate", "Ruben", "Sheelagh", "Isaiah", "Ryan"]
 
 END_AUTO = 6.5  # End-knob max = "auto": window ends start+loopLen into the take
 
@@ -139,7 +139,7 @@ body[data-mode="white"] footer{color:rgba(13,62,61,.45);}
 </style>
 
 <header>
-  <h1><span class="dot"></span>LF Select &middot; Command Center &middot; 200 cols + colors<small>Marco &middot; Nate &middot; Ruben &middot; Sheelagh &middot; Isaiah &middot; synced loops</small></h1>
+  <h1><span class="dot"></span>LF Select &middot; Command Center &middot; 200 cols + colors<small>Marco &middot; Nate &middot; Ruben &middot; Sheelagh &middot; Isaiah &middot; Ryan &middot; synced loops</small></h1>
   <div class="toggle" role="group" aria-label="Color mode">
     <button id="mGreen" aria-pressed="true">Green</button>
     <button id="mWhite" aria-pressed="false">White</button>
