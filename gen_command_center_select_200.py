@@ -71,7 +71,7 @@ body[data-mode="white"] .toggle{border-color:rgba(13,62,61,.3);}
 .toggle button[aria-pressed="true"]{background:#00FFA8;color:#04211c;}
 body[data-mode="white"] .toggle button[aria-pressed="true"]{background:#2FC189;color:#fff;}
 main{flex:1;display:flex;gap:16px;padding:0 clamp(14px,2.5vw,30px) 16px;align-items:stretch;min-height:0;}
-#stageWrap{flex:1;display:flex;align-items:center;justify-content:center;min-width:0;}
+#stageWrap{flex:1;display:flex;align-items:flex-start;justify-content:center;min-width:0;}
 #mosaic{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(2,1fr);
   gap:clamp(6px,0.8vw,10px);width:100%;max-width:calc((100vh - 150px)*1728/908);
   aspect-ratio:1728/908;max-height:calc(100vh - 150px);}
@@ -83,8 +83,10 @@ body[data-mode="white"] .ptile.sel{outline-color:#2FC189;}
   background:rgba(0,0,0,.45);color:#B9F5DD;padding:2px 7px;border-radius:999px;opacity:0;transition:opacity .15s;}
 .ptile:hover .tag,.ptile.sel .tag{opacity:1;}
 .ptile.tweaked .tag{opacity:1;background:rgba(0,255,168,.25);}
-#panel{width:300px;flex:none;overflow-y:auto;padding:2px 2px 10px;
+#panel{width:560px;flex:none;overflow-y:auto;padding:2px 2px 10px;
   display:flex;flex-direction:column;gap:10px;font-size:12px;}
+#groups{column-count:2;column-gap:10px;}
+#groups .sec{break-inside:avoid;margin-bottom:10px;}
 #scope{font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:8px;min-height:26px;}
 #scope .back{appearance:none;border:1px solid rgba(255,255,255,.25);background:transparent;color:inherit;
   border-radius:999px;font:inherit;font-size:11px;padding:3px 9px;cursor:pointer;display:none;}
@@ -289,7 +291,6 @@ addEventListener("click", ()=>tiles.forEach(t=>{ if(t.src.paused && !reduce) t.s
 
 // ---- command rail ----
 const groupsEl = document.getElementById("groups"), inputs = {};
-groupsEl.style.display="flex"; groupsEl.style.flexDirection="column"; groupsEl.style.gap="10px";
 const segUpdaters = [], clipStarts = [], clipColors = [];
 function swatchStrip(mini, getCur, onPick){
   const btns = document.createElement("div"); btns.className = mini?"swatches mini":"swatches";
