@@ -152,7 +152,7 @@ const GROUPS = [
     {f:"edge",   label:"Contour boost",  min:0, max:1, step:0.05, fmt:v=>v?v.toFixed(2):"off"},
   ]},
   {title:"Tone", knobs:[
-    {f:"gamma",  label:"Contrast",    min:0.4, max:4, step:0.05, fmt:v=>v.toFixed(2)},
+    {f:"gamma",  label:"Contrast",    min:0.4, max:8, step:0.05, fmt:v=>v.toFixed(2)},
     {f:"bright", label:"Brightness",  min:0.5, max:1.6, step:0.05, fmt:v=>v.toFixed(2)},
     {f:"floor",  label:"Fill",        min:0, max:0.5, step:0.01, fmt:v=>v.toFixed(2)},
     {f:"minOp",  label:"Min opacity", min:0.1, max:0.95, step:0.05, fmt:v=>v.toFixed(2)},

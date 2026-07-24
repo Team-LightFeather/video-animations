@@ -123,7 +123,7 @@ const RAMPS = {fine:" .·:-=+i1lvtfcLF#", blocky:" .:-=+*%#@", brand:" .:=iltLF#
 const FIELDS = ["cols","ramp","dir","gamma","floor","minOp","bright","color","scan","edge","gScale","weight","stab","smooth","bands","blur","lfThr","pixFill","lfEdge","lfFill"];
 const KNOBS = [
   {f:"cols",   label:"Pixel size",    min:32, max:96, step:2, rtl:true, fmt:v=>v+" cols"},
-  {f:"gamma",  label:"Contrast",      min:0.4, max:4, step:0.05, fmt:v=>v.toFixed(2)},
+  {f:"gamma",  label:"Contrast",      min:0.4, max:8, step:0.05, fmt:v=>v.toFixed(2)},
   {f:"bright", label:"Brightness",    min:0.5, max:1.6, step:0.05, fmt:v=>v.toFixed(2)},
   {f:"floor",  label:"Fill",          min:0, max:0.5, step:0.01, fmt:v=>v.toFixed(2)},
   {f:"minOp",  label:"Min opacity",   min:0.1, max:0.95, step:0.05, fmt:v=>v.toFixed(2)},
