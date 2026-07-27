@@ -1,20 +1,22 @@
 #!/usr/bin/env python3
-"""In-page preview: the five SELECT finals (Marco, Nate, Ruben, Sheelagh,
-Isaiah) rendered with the locked LF-Blocks preset, positioned EXACTLY as the
-people mosaic sits on the two real site pages that use it:
+"""In-page preview: all nine people rendered with MARCO'S SAVED FINALS
+(lf-select-final-20260727-1023.json — Save final export from the 200-col
+command center: global look + per-person gamma/cols/start/end), positioned
+EXACTLY as the people mosaic sits on the two real site pages that use it:
 
   1. /careers — green caphero band, people in the right 54% panel
   2. /about   — light (paper) ab-hero band, same right 54% panel, dark-teal px
 
 Layout numbers are lifted 1:1 from lf-next (master-pages.css +
 CareersPeopleHero.module.css): .cr-hpeople right:0 width:54%, grid at
-top:50%/height:86%/padding:0 28px, 3 cols x 2 rows for 5 clips (the
-component's gcols=min(4,ceil(sqrt(5)))=3 rule), gap 12px, tile radius 10px,
+top:50%/height:86%/padding:0 28px, 3 cols x 3 rows for 9 clips (the
+component's gcols=min(4,ceil(sqrt(9)))=3 rule), gap 12px, tile radius 10px,
 left-edge fade masks (13% on /careers per the module, 26% on /about).
 
-Playback = same master clock as the select command center (shared loop, five
-videos in lockstep). Each person has ONE <video>, drawn to a canvas in each
-section. No knobs — this page is a locked preview of the BASE preset."""
+Playback = same master clock as the select command center (shared loop, all
+videos in lockstep, per-person start/end windows from the finals). Each
+person has ONE <video>, drawn to a canvas in each section. No knobs — this
+page is a locked preview of Marco's finals."""
 import json
 import pathlib
 import subprocess
@@ -24,7 +26,14 @@ import render_core as rc
 OUT = pathlib.Path(__file__).parent / "lf-people-inpage-preview.html"
 
 rc.CLIPS_DIR = pathlib.Path("/Users/marcoopertti/LF-Website/quality_test_outputs/nv2select")
-rc.STEMS = ["Marco", "Nate", "Ruben", "Sheelagh", "Isaiah"]
+rc.STEMS = ["Marco", "Nate", "Ruben", "Sheelagh", "Isaiah", "Ryan", "Morgan",
+            "Sarah", "Shelley"]
+
+FINALS = json.loads(
+    (pathlib.Path(__file__).parent / "lf-select-final-20260727-1023.json")
+    .read_text())
+assert FINALS["stems"] == rc.STEMS, "finals stem order must match STEMS"
+END_AUTO = 6.5  # end >= this means "auto" (start + loopLen), as in the CC
 
 
 def duration(stem: str) -> float:
@@ -39,14 +48,10 @@ def duration(stem: str) -> float:
 DURS = {s: round(duration(s), 2) for s in rc.STEMS}
 LOOP_DEFAULT = round(min(DURS.values()), 1)
 
-# The locked LF Blocks preset (2026-07-23) — same BASE as the select CC.
-BASE = {
-    "cols": 72, "ramp": "PIXLF", "dir": "ink", "gamma": 2.5, "floor": 0.0,
-    "minOp": 0.10, "bright": 0.65, "color": "mono", "scan": 0, "edge": 0.15,
-    "gScale": 1.28, "weight": 700, "stab": 0, "smooth": 0, "bands": 0,
-    "blur": 0, "lfThr": 0.75, "pixFill": 0.66, "lfEdge": 0, "lfFill": "blocks",
-    "loopLen": LOOP_DEFAULT, "start": 0,
-}
+# BASE = Marco's saved-final GLOBAL settings (2026-07-27); per-person
+# overrides ride on top in O (keyed by stem name, exactly as exported).
+BASE = dict(FINALS["settings"]["global"])
+O = FINALS["settings"]["perVideo"]
 
 HTML = r"""<title>LF People — In-Page Preview</title>
 <style>
@@ -101,7 +106,7 @@ body{margin:0;font-family:'Space Grotesk',system-ui,sans-serif;}
 .abhero .cr-hpeople{-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 26%);
   mask-image:linear-gradient(90deg,transparent 0,#000 26%);}
 .cr-hgrid{position:absolute;top:50%;transform:translateY(-50%);left:0;right:0;height:86%;
-  padding:0 28px;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:12px;}
+  padding:0 28px;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:12px;}
 .cr-ptile{position:relative;overflow:hidden;border-radius:10px;}
 .cr-ptile canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
 @media(max-width:960px){.cr-hpeople{width:100%;opacity:.34;}
@@ -158,9 +163,12 @@ body{margin:0;font-family:'Space Grotesk',system-ui,sans-serif;}
 
 <script>
 const BASE = __BASE__;
+const O = __O__;          // Marco's per-person finals, keyed by stem name
+const END_AUTO = __END_AUTO__;
 const CLIPS = __CLIPS__;
 const STEMS = __STEMS__;
 __CORE__
+function eff(i){ const o = O[STEMS[i]]; return o ? Object.assign({}, BASE, o) : BASE; }
 /* pixel palettes: white pixels on the green band, dark-teal on the paper band */
 const PAL_GREEN = {bright:"255,255,255", dim:"148,224,196"};
 const PAL_LIGHT = {bright:"13,62,61",   dim:"96,132,127"};
@@ -170,11 +178,11 @@ const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion:r
 
 /* one <video> per person; a canvas tile in EACH section shares it */
 const videos = [], tiles = [];
-function addTile(grid, clip, v, pal){
+function addTile(grid, clip, v, pal, idx){
   const el = document.createElement("div"); el.className = "cr-ptile";
   const c = document.createElement("canvas"); el.appendChild(c);
   const t = initTile(clip, c, v);
-  t.pal = pal; t.el = el;
+  t.pal = pal; t.el = el; t.idx = idx;
   grid.appendChild(el); tiles.push(t);
   return t;
 }
@@ -185,8 +193,8 @@ CLIPS.forEach((clip,i)=>{
   v.muted = true; v.loop = true; v.autoplay = true; v.playsInline = true;
   v.setAttribute("muted",""); v.setAttribute("playsinline","");
   videos.push(v);
-  const tc = addTile(gC, clip, v, PAL_GREEN);
-  const ta = addTile(gA, clip, v, PAL_LIGHT);
+  const tc = addTile(gC, clip, v, PAL_GREEN, i);
+  const ta = addTile(gA, clip, v, PAL_LIGHT, i);
   v.addEventListener("loadeddata", ()=>{
     if(reduce){ [tc,ta].forEach(t=>{ sizeTile(t); drawTile(t); }); try{v.pause();}catch(e){} }
     else { v.play().catch(()=>{}); [tc,ta].forEach(sizeTile); }
@@ -195,23 +203,28 @@ CLIPS.forEach((clip,i)=>{
 });
 window.__tiles = tiles;  // for headless verification scripts
 
-function drawTile(t){ window.__PAL = t.pal; renderTile(t, BASE); }
+function drawTile(t){ window.__PAL = t.pal; renderTile(t, eff(t.idx)); }
 
-/* master clock — same engine as the select command center (BASE only) */
+/* master clock — same engine as the select command center, with each
+   person's start/end window from the finals (rate auto-derives, so all
+   nine loop in lockstep exactly as tuned) */
 const t0 = performance.now();
 function loopLen(){ return Math.max(0.5, BASE.loopLen || 1); }
-function playWin(d){
-  const st = Math.min(BASE.start||0, Math.max(0, d-0.4));
-  const en = Math.min(d, st + loopLen());
+function playWin(i, d){
+  const s = eff(i);
+  const st = Math.min(s.start||0, Math.max(0, d-0.4));
+  const en = (s.end==null || s.end>=END_AUTO)
+    ? Math.min(d, st + loopLen())
+    : Math.min(Math.max(s.end, st+0.2), d);
   return {st, en, rate: Math.min(4, Math.max(0.25, (en-st)/loopLen()))};
 }
 function syncClock(){
   if(reduce) return;
   const phi = ((performance.now()-t0)/1000) % loopLen();
-  videos.forEach(v=>{
+  videos.forEach((v,i)=>{
     const d = v.duration;
     if(!d || v.readyState<2) return;
-    const w = playWin(d);
+    const w = playWin(i, d);
     if(Math.abs(v.playbackRate - w.rate) > 0.01) v.playbackRate = w.rate;
     const target = Math.min(w.en - 0.03, w.st + phi*w.rate);
     if(Math.abs(v.currentTime - target) > 0.13){
@@ -231,6 +244,8 @@ addEventListener("click", ()=>videos.forEach(v=>{ if(v.paused && !reduce) v.play
 html = (HTML
         .replace("__FONTS__", rc.fonts_css())
         .replace("__BASE__", json.dumps(BASE))
+        .replace("__O__", json.dumps(O))
+        .replace("__END_AUTO__", json.dumps(END_AUTO))
         .replace("__STEMS__", json.dumps(rc.STEMS))
         .replace("__CLIPS__", rc.build_clips("video"))
         .replace("__CORE__", rc.JS_CORE))

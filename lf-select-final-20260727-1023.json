@@ -1,0 +1,84 @@
+{
+  "page": "lf-select-command-center-200",
+  "saved": "2026-07-27T14:23:31.776Z",
+  "stems": [
+    "Marco",
+    "Nate",
+    "Ruben",
+    "Sheelagh",
+    "Isaiah",
+    "Ryan",
+    "Morgan",
+    "Sarah",
+    "Shelley"
+  ],
+  "mode": "green",
+  "settings": {
+    "global": {
+      "cols": 162,
+      "ramp": "PIXLF",
+      "dir": "ink",
+      "gamma": 2.5,
+      "floor": 0,
+      "minOp": 0.1,
+      "bright": 0.65,
+      "color": "mono",
+      "scan": 0,
+      "edge": 0.15,
+      "gScale": 1.28,
+      "weight": 700,
+      "stab": 0,
+      "smooth": 0,
+      "bands": 0,
+      "blur": 0,
+      "lfThr": 0.75,
+      "pixFill": 0.66,
+      "lfEdge": 0,
+      "lfFill": "blocks",
+      "pxc": "auto",
+      "loopLen": 3.9,
+      "start": 0,
+      "end": 6.5
+    },
+    "perVideo": {
+      "Marco": {
+        "gamma": 2.9,
+        "start": 1.1,
+        "cols": 170
+      },
+      "Nate": {
+        "gamma": 2.7
+      },
+      "Ruben": {
+        "gamma": 7.2,
+        "cols": 174,
+        "start": 1.1,
+        "floor": 0,
+        "bright": 0.5,
+        "end": 4.7
+      },
+      "Sheelagh": {
+        "gamma": 6.7
+      },
+      "Isaiah": {
+        "start": 1.6,
+        "gamma": 2.7
+      },
+      "Ryan": {
+        "gamma": 2.75,
+        "start": 1.1,
+        "cols": 124
+      },
+      "Morgan": {
+        "gamma": 3.9
+      },
+      "Sarah": {
+        "gamma": 2.5
+      },
+      "Shelley": {
+        "gamma": 6.85,
+        "cols": 172
+      }
+    }
+  }
+}
