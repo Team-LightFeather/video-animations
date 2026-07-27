@@ -217,13 +217,15 @@ function renderTile(t, V){
       // itself, and absolute RGB distance keeps its lighting falloff. Compare
       // CHROMATICITY (hue, brightness-independent) instead: wall shading has
       // the wall's hue and vanishes; skin/hair/clothes differ in hue and stay.
-      // Very dark cells keep unconditionally — the wall is mid-bright and
-      // near-black chromaticity is sensor noise.
-      const ws=wr+wg+wb+1, wcx=wr/ws, wcy=wg/ws, thr=t.clip.wdDist||0.07;
+      // (No "very dark = subject" rescue: deep wall/door shadow dips under
+      // any luma floor and reads as an edge strip — Shelley2, 7-27.)
+      // thr 0.12: measured on Shelley2 — wall hue variation peaks ~0.07
+      // (deeper green on the less-lit side), subject is 0.22+ (hair/skin/shirt)
+      const ws=wr+wg+wb+1, wcx=wr/ws, wcy=wg/ws, thr=t.clip.wdDist||0.12;
       for(let k=0;k<n;k++){const i=k*4;
         const s3=data[i]+data[i+1]+data[i+2]+1;
         const dx=data[i]/s3-wcx, dy=data[i+1]/s3-wcy;
-        keep[k]=(Math.sqrt(dx*dx+dy*dy)>thr || ema[k]<0.14)?1:0;}
+        keep[k]=Math.sqrt(dx*dx+dy*dy)>thr?1:0;}
     }
   } else if(S>0){
     // hysteresis: a cell flips its kept-state only when it clearly crosses the cutoff
