@@ -198,13 +198,17 @@ function addTile(grid, clip, v, pal, idx){
   return t;
 }
 function blitRecolor(src, dst, rgb){
+  // dst keeps its OWN backing size (its CSS box differs from src's — the
+  // about tiles are shorter than the careers ones; drawing src stretched
+  // into dst squished the white section). Contain-fit src instead.
+  if(!dst.ready) sizeTile(dst);
   const c = dst.c, x = dst.ctx;
-  if(c.width !== src.c.width || c.height !== src.c.height){
-    c.width = src.c.width; c.height = src.c.height;
-  }
   x.setTransform(1,0,0,1,0,0);
   x.clearRect(0,0,c.width,c.height);
-  x.drawImage(src.c,0,0);
+  const ar = src.c.width/src.c.height;
+  let w = c.width, h = w/ar;
+  if(h > c.height){ h = c.height; w = h*ar; }
+  x.drawImage(src.c, (c.width-w)/2, (c.height-h)/2, w, h);
   x.globalCompositeOperation = "source-in";
   x.fillStyle = "rgb("+rgb+")";
   x.fillRect(0,0,c.width,c.height);
