@@ -30,7 +30,7 @@ rc.STEMS = ["Marco", "Nate", "Ruben", "Sheelagh", "Isaiah", "Ryan", "Morgan",
             "Sarah", "Shelley"]
 
 FINALS = json.loads(
-    (pathlib.Path(__file__).parent / "lf-select-final-20260727-1023.json")
+    (pathlib.Path(__file__).parent / "lf-select-final-merged-20260727-1212.json")
     .read_text())
 assert FINALS["stems"] == rc.STEMS, "finals stem order must match STEMS"
 END_AUTO = 6.5  # end >= this means "auto" (start + loopLen), as in the CC

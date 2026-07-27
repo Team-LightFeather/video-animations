@@ -1,0 +1,39 @@
+{
+  "page": "lf-select-command-center-200",
+  "saved": "2026-07-27T16:12:45.519Z",
+  "stems": [
+    "Shelley"
+  ],
+  "mode": "green",
+  "settings": {
+    "global": {
+      "cols": 192,
+      "ramp": "PIXLF",
+      "dir": "ink",
+      "gamma": 4.9,
+      "floor": 0,
+      "minOp": 0.25,
+      "bright": 0.6,
+      "color": "mono",
+      "scan": 0,
+      "edge": 0.15,
+      "gScale": 1.28,
+      "weight": 700,
+      "stab": 0,
+      "smooth": 0,
+      "bands": 0,
+      "blur": 0,
+      "lfThr": 0.75,
+      "pixFill": 0.66,
+      "lfEdge": 0,
+      "lfFill": "blocks",
+      "pxc": "auto",
+      "loopLen": 3.9,
+      "start": 0,
+      "end": 3.7049999999999996,
+      "wdTone": "std",
+      "wdDist": 0.08
+    },
+    "perVideo": {}
+  }
+}
