@@ -221,7 +221,8 @@ function renderTile(t, V){
       // any luma floor and reads as an edge strip — Shelley2, 7-27.)
       // thr 0.12: measured on Shelley2 — wall hue variation peaks ~0.07
       // (deeper green on the less-lit side), subject is 0.22+ (hair/skin/shirt)
-      const ws=wr+wg+wb+1, wcx=wr/ws, wcy=wg/ws, thr=t.clip.wdDist||0.12;
+      const ws=wr+wg+wb+1, wcx=wr/ws, wcy=wg/ws,
+            thr=V.wdDist||t.clip.wdDist||0.12;  // knob-tunable mask reach
       for(let k=0;k<n;k++){const i=k*4;
         const s3=data[i]+data[i+1]+data[i+2]+1;
         const dx=data[i]/s3-wcx, dy=data[i+1]/s3-wcy;
@@ -330,8 +331,10 @@ function renderTile(t, V){
     const brv=Math.min(1,Math.max(0,(ema[k]-t.lo)/rng));
     let d=V.dir==="ink"?1-brv:brv;
     // dark-wall clips: ink = distance from the wall's mid-gray, so dark hair
-    // AND bright clothing both read dense while midtone skin stays light
-    if(t.wd) d=Math.min(1,Math.abs(brv-0.5)*2);
+    // AND bright clothing both read dense while midtone skin stays light.
+    // V.wdTone="std" opts a clip back into the normal ink mapping (Shelley:
+    // the wall-distance map inverted her — skin filled, features emptied)
+    if(t.wd && V.wdTone!=="std") d=Math.min(1,Math.abs(brv-0.5)*2);
     d=Math.pow(smooth(d),V.gamma);
     // contour cells bypass quantization and keep the full glyph range
     const isEdge=V.edge>0 && t.grd[k]>=eThr;
