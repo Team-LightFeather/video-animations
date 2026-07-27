@@ -5,7 +5,11 @@
 - Pixel color pickable from the LightFeather brand palette
   (brand-assets/tokens.css), globally AND per person: a new `pxc` settings
   field ("auto" = follow G/W mode, else a brand hex), with an always-visible
-  "Clip colors" swatch row per person (same pattern as Clip start times).
+  One GLOBAL brand-color grid (per-clip color rows removed 7-27 at Marco's
+  request; any per-video pxc still in saved localStorage is ignored, not
+  deleted). "Save final" writes the settings JSON to a real file via the
+  artifact downloads capability — that file is the handback for baking
+  finals into BASE / a locked preview.
 Writes its own HTML file and uses its own localStorage key (lfSelectCC2X) so
 it can NEVER touch Marco's tuned settings on the other command centers.
 
@@ -23,7 +27,7 @@ import render_core as rc
 OUT = pathlib.Path(__file__).parent / "lf-select-command-center-200.html"
 
 rc.CLIPS_DIR = pathlib.Path("/Users/marcoopertti/LF-Website/quality_test_outputs/nv2select")
-rc.STEMS = ["Marco", "Nate", "Ruben", "Sheelagh", "Isaiah", "Ryan", "Morgan", "Sarah"]
+rc.STEMS = ["Marco", "Nate", "Ruben", "Sheelagh", "Isaiah", "Ryan", "Morgan", "Sarah", "Shelley"]
 
 END_AUTO = 6.5  # End-knob max = "auto": window ends start+loopLen into the take
 
@@ -72,9 +76,9 @@ body[data-mode="white"] .toggle{border-color:rgba(13,62,61,.3);}
 body[data-mode="white"] .toggle button[aria-pressed="true"]{background:#2FC189;color:#fff;}
 main{flex:1;display:flex;gap:16px;padding:0 clamp(14px,2.5vw,30px) 16px;align-items:stretch;min-height:0;}
 #stageWrap{flex:1;display:flex;align-items:flex-start;justify-content:center;min-width:0;}
-#mosaic{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(2,1fr);
-  gap:clamp(6px,0.8vw,10px);width:100%;max-width:calc((100vh - 150px)*1728/908);
-  aspect-ratio:1728/908;max-height:calc(100vh - 150px);}
+#mosaic{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);
+  gap:clamp(6px,0.8vw,10px);width:100%;max-width:calc((100vh - 150px)*1296/1362);
+  aspect-ratio:1296/1362;max-height:calc(100vh - 150px);}
 .ptile{position:relative;overflow:hidden;border-radius:9px;cursor:pointer;}
 .ptile canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
 .ptile.sel{outline:2px solid #00FFA8;outline-offset:2px;}
@@ -141,7 +145,7 @@ body[data-mode="white"] footer{color:rgba(13,62,61,.45);}
 </style>
 
 <header>
-  <h1><span class="dot"></span>LF Select &middot; Command Center &middot; 200 cols + colors<small>Marco &middot; Nate &middot; Ruben &middot; Sheelagh &middot; Isaiah &middot; Ryan &middot; Morgan &middot; Sarah &middot; synced loops</small></h1>
+  <h1><span class="dot"></span>LF Select &middot; Command Center &middot; 200 cols + colors<small>Marco &middot; Nate &middot; Ruben &middot; Sheelagh &middot; Isaiah &middot; Ryan &middot; Morgan &middot; Sarah &middot; Shelley &middot; synced loops</small></h1>
   <div class="toggle" role="group" aria-label="Color mode">
     <button id="mGreen" aria-pressed="true">Green</button>
     <button id="mWhite" aria-pressed="false">White</button>
@@ -158,6 +162,7 @@ body[data-mode="white"] footer{color:rgba(13,62,61,.45);}
       <button id="resetVid" style="display:none">Reset this video</button>
       <button id="clearTweaks">Clear video tweaks</button>
       <button id="copyBtn">Copy settings</button>
+      <button id="finalBtn">Save final ⤓</button>
     </div>
     <div id="json"></div>
   </aside>
@@ -229,7 +234,12 @@ let mode="green", sel=null;
 let G = Object.assign({}, BASE);
 let O = {};
 window.__PAL = PALS[mode];
-function eff(i){ return O[i] ? Object.assign({}, G, O[i]) : G; }
+function eff(i){
+  if(!O[i]) return G;
+  const s = Object.assign({}, G, O[i]);
+  s.pxc = G.pxc;  // color is global-only; stale per-video pxc in saved data is ignored
+  return s;
+}
 
 const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches;
 const mosaic = document.getElementById("mosaic");
@@ -291,7 +301,7 @@ addEventListener("click", ()=>tiles.forEach(t=>{ if(t.src.paused && !reduce) t.s
 
 // ---- command rail ----
 const groupsEl = document.getElementById("groups"), inputs = {};
-const segUpdaters = [], clipStarts = [], clipColors = [];
+const segUpdaters = [], clipStarts = [];
 function swatchStrip(mini, getCur, onPick){
   const btns = document.createElement("div"); btns.className = mini?"swatches mini":"swatches";
   BRAND.forEach(([v,name])=>{
@@ -356,17 +366,17 @@ GROUPS.forEach(g=>{
   });
   if(g.title==="Pixel grid"){
     sec.appendChild(segEl("Fill style", [{label:"Blocks",value:"blocks"},{label:"Lines",value:"lines"}], "lfFill", ()=>effSel().lfFill||"blocks"));
-    // pixel color from the brand palette (follows the global/per-video scope)
+    // ONE global pixel color from the brand palette (applies to every video)
     const w = document.createElement("div"); w.className="knob";
     const row = document.createElement("div"); row.className="row";
-    const lb = document.createElement("label"); lb.textContent="Pixel color";
+    const lb = document.createElement("label"); lb.textContent="Pixel color (all)";
     const val = document.createElement("span"); val.className="val";
     row.appendChild(lb); row.appendChild(val);
-    const strip = swatchStrip(false, ()=>effSel().pxc,
+    const strip = swatchStrip(false, ()=>G.pxc,
       v=>{ setField("pxc", v); refreshPanel(); });
     w.appendChild(row); w.appendChild(strip);
     sec.appendChild(w);
-    segUpdaters.push(()=>{ strip.update(); val.textContent = brandName(effSel().pxc); });
+    segUpdaters.push(()=>{ strip.update(); val.textContent = brandName(G.pxc); });
   }
   if(g.title==="Letter detail"){
     sec.appendChild(segEl("L/F at silhouette edges", [{label:"On",value:1},{label:"Off",value:0}], "lfEdge", ()=>String(effSel().lfEdge==null?0:effSel().lfEdge)));
@@ -375,28 +385,6 @@ GROUPS.forEach(g=>{
     sec.appendChild(segEl("Noise blur", [{label:"Off",value:0},{label:"On",value:1}], "blur", ()=>String(effSel().blur||0)));
   }
   groupsEl.appendChild(sec);
-  if(g.title==="Pixel grid"){
-    // per-clip colors, always visible — one brand-swatch row per person
-    const cc = document.createElement("div"); cc.className="sec";
-    const cct = document.createElement("div"); cct.className="st"; cct.textContent="Clip colors";
-    cc.appendChild(cct);
-    STEMS.forEach((name,i)=>{
-      const w = document.createElement("div"); w.className="knob";
-      const row = document.createElement("div"); row.className="row";
-      const lb = document.createElement("label"); lb.textContent = name;
-      const val = document.createElement("span"); val.className="val";
-      row.appendChild(lb); row.appendChild(val);
-      const strip = swatchStrip(true, ()=>eff(i).pxc, v=>{
-        (O[i] = O[i]||{}).pxc = v;
-        redraw(i); markTweaks(); save(); updateJson(); updateClipColors();
-        if(sel===i) refreshPanel();
-      });
-      w.appendChild(row); w.appendChild(strip);
-      cc.appendChild(w);
-      clipColors.push({strip, val, i});
-    });
-    groupsEl.appendChild(cc);
-  }
   if(g.title==="Playback"){
     // per-clip start times, always visible — one slider per person
     const cs = document.createElement("div"); cs.className="sec";
@@ -430,22 +418,16 @@ function updateClipStarts(){
     c.inp.value = v; c.val.textContent = v.toFixed(1)+"s";
   });
 }
-function updateClipColors(){
-  clipColors.forEach(c=>{
-    c.strip.update();
-    c.val.textContent = brandName(eff(c.i).pxc);
-  });
-}
 function effSel(){ return sel==null ? G : eff(sel); }
 function winSel(){
   const d = sel==null ? END_AUTO : (tiles[sel].src.duration || END_AUTO);
   return playWin(sel==null ? -1 : sel, d);
 }
 function setField(f, v){
-  if(f==="loopLen"){ G[f]=v; }                       // sync period is global-only
-  else if(sel==null){ G[f]=v; }
+  const glob = f==="loopLen" || f==="pxc";           // sync period + color are global-only
+  if(glob || sel==null){ G[f]=v; }
   else { (O[sel] = O[sel]||{})[f]=v; markTweaks(); }
-  if(sel==null){ tiles.forEach(resetTone); redraw(); }
+  if(glob || sel==null){ tiles.forEach(resetTone); redraw(); }
   else { resetTone(tiles[sel]); redraw(sel); }
   save(); updateJson();
 }
@@ -463,7 +445,6 @@ function refreshPanel(){
   document.getElementById("backAll").style.display = sel==null ? "none" : "";
   document.getElementById("resetVid").style.display = sel==null ? "none" : "";
   updateClipStarts();
-  updateClipColors();
   updateJson();
 }
 function select(i){
@@ -473,7 +454,10 @@ function select(i){
 }
 function markTweaks(){ tiles.forEach((t,i)=>t.el.classList.toggle("tweaked", !!O[i] && Object.keys(O[i]).length>0)); }
 function updateJson(){
-  const pv={}; Object.keys(O).forEach(i=>{ if(Object.keys(O[i]).length) pv[STEMS[i]]=O[i]; });
+  const pv={}; Object.keys(O).forEach(i=>{
+    const o = Object.assign({}, O[i]); delete o.pxc;  // color is global-only now
+    if(Object.keys(o).length) pv[STEMS[i]]=o;
+  });
   document.getElementById("json").textContent = JSON.stringify({global:G, perVideo:pv});
 }
 document.getElementById("backAll").addEventListener("click", ()=>select(null));
@@ -493,6 +477,37 @@ document.getElementById("copyBtn").addEventListener("click", ()=>{
     setTimeout(()=>b.textContent="Copy settings", 1200);
   }).catch(()=>{});
 });
+
+// ---- Save final: writes the settings to a real JSON file (Downloads folder).
+// Hand that file to Claude and the settings get baked in as the new defaults.
+(function(){
+  const b = document.getElementById("finalBtn");
+  if(!(window.claude && window.claude.downloads)){ b.style.display="none"; return; }
+  const idle = "Save final ⤓";
+  b.addEventListener("click", ()=>{
+    const now = new Date();
+    const stamp = now.getFullYear()
+      + String(now.getMonth()+1).padStart(2,"0")
+      + String(now.getDate()).padStart(2,"0") + "-"
+      + String(now.getHours()).padStart(2,"0")
+      + String(now.getMinutes()).padStart(2,"0");
+    const payload = JSON.stringify({
+      page: "lf-select-command-center-200",
+      saved: now.toISOString(),
+      stems: STEMS,
+      mode: mode,
+      settings: JSON.parse(document.getElementById("json").textContent),
+    }, null, 2);
+    b.textContent = "Confirm the download…";
+    window.claude.downloads.save({filename:"lf-select-final-"+stamp+".json", data:payload})
+      .then(()=>{ b.textContent="Saved ✓ — send the file to Claude";
+                  setTimeout(()=>b.textContent=idle, 4000); })
+      .catch(err=>{
+        b.textContent = (err && err.code==="declined") ? idle : "Save failed — use Copy settings";
+        setTimeout(()=>b.textContent=idle, 3000);
+      });
+  });
+})();
 
 // ---- mode ----
 const bG = document.getElementById("mGreen"), bW = document.getElementById("mWhite");

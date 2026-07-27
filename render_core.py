@@ -192,14 +192,22 @@ function renderTile(t, V){
   // -- shared isolation pipeline (identical for every variant, runs on smoothed luma) --
   const S=V.stab||0;
   if(t.wd){
-    // dark-wall clip: the wall is a neutral mid-gray, so "darker than wall"
-    // inverts. Keep cells with real chroma (skin) or extreme luma (white
-    // shirt / dark hair); the flat gray wall and pad bars have neither.
-    if(!t.satA || t.satA.length!==n) t.satA=new Float32Array(n);
+    // dark/colored-wall clip (Ruben's gray wall, Shelley's green wall): a
+    // luma-only "darker than wall" mask inverts, and "has chroma" fails when
+    // the wall itself is saturated. Keep cells whose COLOR sits far from the
+    // wall's own color, estimated per frame from the top corner patches /
+    // pad bars and EMA-stabilized against hands passing through a corner.
+    const pw=Math.max(2,cols>>4), ph=Math.max(2,rows>>4), rs=[], gs=[], bs=[];
+    for(let y=0;y<ph;y++) for(const x0 of [0, cols-pw]) for(let x=x0;x<x0+pw;x++){
+      const i=(y*cols+x)*4; rs.push(data[i]); gs.push(data[i+1]); bs.push(data[i+2]);
+    }
+    const m=[median(rs), median(gs), median(bs)];
+    if(!t.wRGB) t.wRGB=m; else for(let c=0;c<3;c++) t.wRGB[c]+=(m[c]-t.wRGB[c])*0.2;
+    const wr=t.wRGB[0], wg=t.wRGB[1], wb=t.wRGB[2],
+          thr2=Math.pow(255*(t.clip.wdDist||0.15),2);  // Euclidean RGB distance, /255 units
     for(let k=0;k<n;k++){const i=k*4;
-      const mx=Math.max(data[i],data[i+1],data[i+2]), mn=Math.min(data[i],data[i+1],data[i+2]);
-      t.satA[k]=(mx-mn)/255;}
-    for(let k=0;k<n;k++) keep[k]=(t.satA[k]>0.10 || ema[k]>0.66 || ema[k]<0.18)?1:0;
+      const dr=data[i]-wr, dg=data[i+1]-wg, db=data[i+2]-wb;
+      keep[k]=(dr*dr+dg*dg+db*db)>thr2?1:0;}
   } else if(S>0){
     // hysteresis: a cell flips its kept-state only when it clearly crosses the cutoff
     for(let k=0;k<n;k++) keep[k]=(t.pKeep[k]?ema[k]<t.solid+S*0.5:ema[k]<t.solid-S*0.5)?1:0;
