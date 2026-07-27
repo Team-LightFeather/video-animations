@@ -15,6 +15,7 @@ non-white palettes at play time with one cheap composite per frame."""
 import json
 import pathlib
 import subprocess
+import sys
 
 import render_core as rc
 
@@ -43,6 +44,14 @@ def duration(stem: str) -> float:
 DURS = {s: round(duration(s), 3) for s in rc.STEMS}
 BASE = dict(FINALS["settings"]["global"])
 O = FINALS["settings"]["perVideo"]
+
+# Optional argv cols override (e.g. `gen_bake_page.py 120`): pins every
+# person to that grid — per-person cols overrides are stripped, everything
+# else from the finals stays.
+if len(sys.argv) > 1:
+    BASE["cols"] = int(sys.argv[1])
+    O = {n: {k: v for k, v in o.items() if k != "cols"} for n, o in O.items()}
+    O = {n: o for n, o in O.items() if o}
 
 HTML = r"""<title>bake</title>
 <style>
