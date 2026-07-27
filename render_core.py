@@ -204,10 +204,27 @@ function renderTile(t, V){
     const m=[median(rs), median(gs), median(bs)];
     if(!t.wRGB) t.wRGB=m; else for(let c=0;c<3;c++) t.wRGB[c]+=(m[c]-t.wRGB[c])*0.2;
     const wr=t.wRGB[0], wg=t.wRGB[1], wb=t.wRGB[2],
-          thr2=Math.pow(255*(t.clip.wdDist||0.15),2);  // Euclidean RGB distance, /255 units
-    for(let k=0;k<n;k++){const i=k*4;
-      const dr=data[i]-wr, dg=data[i+1]-wg, db=data[i+2]-wb;
-      keep[k]=(dr*dr+dg*dg+db*db)>thr2?1:0;}
+          wSat=(Math.max(wr,wg,wb)-Math.min(wr,wg,wb))/255;
+    if(wSat<0.08){
+      // NEUTRAL gray wall (Ruben): the original chroma+extremes test — wall
+      // shading/shadows stay invisible because gray has no chroma. (A plain
+      // color-distance mask was tried 7-27 and let the shading through.)
+      for(let k=0;k<n;k++){const i=k*4;
+        const mx=Math.max(data[i],data[i+1],data[i+2]), mn=Math.min(data[i],data[i+1],data[i+2]);
+        keep[k]=((mx-mn)/255>0.10 || ema[k]>0.66 || ema[k]<0.18)?1:0;}
+    } else {
+      // SATURATED wall (Shelley's green): "has chroma" would keep the wall
+      // itself, and absolute RGB distance keeps its lighting falloff. Compare
+      // CHROMATICITY (hue, brightness-independent) instead: wall shading has
+      // the wall's hue and vanishes; skin/hair/clothes differ in hue and stay.
+      // Very dark cells keep unconditionally — the wall is mid-bright and
+      // near-black chromaticity is sensor noise.
+      const ws=wr+wg+wb+1, wcx=wr/ws, wcy=wg/ws, thr=t.clip.wdDist||0.07;
+      for(let k=0;k<n;k++){const i=k*4;
+        const s3=data[i]+data[i+1]+data[i+2]+1;
+        const dx=data[i]/s3-wcx, dy=data[i+1]/s3-wcy;
+        keep[k]=(Math.sqrt(dx*dx+dy*dy)>thr || ema[k]<0.14)?1:0;}
+    }
   } else if(S>0){
     // hysteresis: a cell flips its kept-state only when it clearly crosses the cutoff
     for(let k=0;k<n;k++) keep[k]=(t.pKeep[k]?ema[k]<t.solid+S*0.5:ema[k]<t.solid-S*0.5)?1:0;
