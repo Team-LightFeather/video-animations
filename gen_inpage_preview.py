@@ -26,13 +26,16 @@ import render_core as rc
 OUT = pathlib.Path(__file__).parent / "lf-people-inpage-preview.html"
 
 rc.CLIPS_DIR = pathlib.Path("/Users/marcoopertti/LF-Website/quality_test_outputs/nv2select")
-rc.STEMS = ["Marco", "Nate", "Ruben", "Sheelagh", "Isaiah", "Ryan", "Morgan",
-            "Sarah", "Shelley"]
+# Display order (Marco 7-27: Sarah first). Safe to reorder HERE because the
+# finals' perVideo is keyed by NAME — never reorder the main CC's STEMS,
+# whose localStorage overrides are index-keyed.
+rc.STEMS = ["Sarah", "Marco", "Nate", "Ruben", "Sheelagh", "Isaiah", "Ryan",
+            "Morgan", "Shelley"]
 
 FINALS = json.loads(
     (pathlib.Path(__file__).parent / "lf-select-final-merged-20260727-1212.json")
     .read_text())
-assert FINALS["stems"] == rc.STEMS, "finals stem order must match STEMS"
+assert sorted(FINALS["stems"]) == sorted(rc.STEMS), "finals stems must match STEMS"
 END_AUTO = 6.5  # end >= this means "auto" (start + loopLen), as in the CC
 
 
@@ -176,8 +179,16 @@ window.__PAL = PAL_GREEN;
 
 const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches;
 
-/* one <video> per person; a canvas tile in EACH section shares it */
-const videos = [], tiles = [];
+/* one <video> per person; a canvas tile in EACH section shares it.
+   PERF (7-27, look-identical — page was 6fps with 18 full renders/pass):
+   - each person is RENDERED once (careers tile = master); the about tile
+     is a recolor BLIT through source-in compositing — pixel-exact for the
+     mono color mode these finals use
+   - IntersectionObserver: no rendering for off-screen sections; all
+     videos pause when neither hero is visible
+   - the rAF loop renders round-robin inside a time budget, so no single
+     long task ever blocks scrolling */
+const videos = [], tiles = [], pairs = [];
 function addTile(grid, clip, v, pal, idx){
   const el = document.createElement("div"); el.className = "cr-ptile";
   const c = document.createElement("canvas"); el.appendChild(c);
@@ -185,6 +196,19 @@ function addTile(grid, clip, v, pal, idx){
   t.pal = pal; t.el = el; t.idx = idx;
   grid.appendChild(el); tiles.push(t);
   return t;
+}
+function blitRecolor(src, dst, rgb){
+  const c = dst.c, x = dst.ctx;
+  if(c.width !== src.c.width || c.height !== src.c.height){
+    c.width = src.c.width; c.height = src.c.height;
+  }
+  x.setTransform(1,0,0,1,0,0);
+  x.clearRect(0,0,c.width,c.height);
+  x.drawImage(src.c,0,0);
+  x.globalCompositeOperation = "source-in";
+  x.fillStyle = "rgb("+rgb+")";
+  x.fillRect(0,0,c.width,c.height);
+  x.globalCompositeOperation = "source-over";
 }
 const gC = document.getElementById("gridCareers");
 const gA = document.getElementById("gridAbout");
@@ -195,15 +219,40 @@ CLIPS.forEach((clip,i)=>{
   videos.push(v);
   const tc = addTile(gC, clip, v, PAL_GREEN, i);
   const ta = addTile(gA, clip, v, PAL_LIGHT, i);
+  pairs.push({tc, ta, i});
   v.addEventListener("loadeddata", ()=>{
-    if(reduce){ [tc,ta].forEach(t=>{ sizeTile(t); drawTile(t); }); try{v.pause();}catch(e){} }
-    else { v.play().catch(()=>{}); [tc,ta].forEach(sizeTile); }
+    sizeTile(tc); sizeTile(ta);
+    if(reduce){
+      window.__PAL = PAL_GREEN; renderTile(tc, eff(i));
+      blitRecolor(tc, ta, PAL_LIGHT.bright);
+      try{v.pause();}catch(e){}
+    } else if(anyVisible) v.play().catch(()=>{});
   });
   v.src = clip.src; v.load();
 });
 window.__tiles = tiles;  // for headless verification scripts
 
-function drawTile(t){ window.__PAL = t.pal; renderTile(t, eff(t.idx)); }
+/* section visibility — do no work for what's off screen */
+let visC = true, visA = true, anyVisible = true;
+function setPlaying(on){
+  videos.forEach(v=>{
+    if(on){ if(v.paused && !reduce) v.play().catch(()=>{}); }
+    else { try{v.pause();}catch(e){} }
+  });
+}
+(function(){
+  if(!("IntersectionObserver" in window)) return;
+  const secC = document.querySelector(".caphero"), secA = document.querySelector(".abhero");
+  const io = new IntersectionObserver(es=>{
+    es.forEach(e=>{
+      if(e.target===secC) visC = e.isIntersecting;
+      if(e.target===secA) visA = e.isIntersecting;
+    });
+    const any = visC || visA;
+    if(any !== anyVisible){ anyVisible = any; setPlaying(any); }
+  }, {rootMargin:"120px"});
+  io.observe(secC); io.observe(secA);
+})();
 
 /* master clock — same engine as the select command center, with each
    person's start/end window from the finals (rate auto-derives, so all
@@ -232,10 +281,29 @@ function syncClock(){
     }
   });
 }
-setInterval(syncClock, 200);
-let last=0;
-function loop(ts){ if(ts-last>85){ last=ts; tiles.forEach(drawTile); } requestAnimationFrame(loop); }
-if(!reduce) requestAnimationFrame(loop);
+setInterval(()=>{ if(anyVisible) syncClock(); }, 200);
+
+/* round-robin renderer: render masters (and blit their about copies) until
+   ~7ms of this frame is spent — every tile still refreshes a few times per
+   second, but the main thread is never blocked by a monolithic pass */
+let cursor = 0;
+function tick(){
+  if(anyVisible && pairs.length){
+    const t1 = performance.now();
+    let done = 0;
+    do {
+      const p = pairs[cursor % pairs.length]; cursor++;
+      if(visC || visA){
+        window.__PAL = PAL_GREEN;
+        renderTile(p.tc, eff(p.i));
+        if(visA) blitRecolor(p.tc, p.ta, PAL_LIGHT.bright);
+      }
+      done++;
+    } while(performance.now() - t1 < 7 && done < pairs.length);
+  }
+  requestAnimationFrame(tick);
+}
+if(!reduce) requestAnimationFrame(tick);
 addEventListener("resize", ()=>tiles.forEach(sizeTile));
 addEventListener("click", ()=>videos.forEach(v=>{ if(v.paused && !reduce) v.play().catch(()=>{}); }));
 </script>
